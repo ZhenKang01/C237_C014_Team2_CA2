@@ -113,6 +113,7 @@ db.connect((error) => {
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.set('trust proxy', 1);
 app.use(session({
     secret: process.env.SESSION_SECRET || 'development-only-secret',
     resave: false,
@@ -150,17 +151,17 @@ function validateRegistration(req, res, next) {
     if (!full_name || !email || !password || !phone_number) {
         req.flash('error', 'All fields are required.');
         req.flash('formData', req.body);
-        return res.redirect('/register');
+        return req.session.save(() => res.redirect('/register'));
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         req.flash('error', 'Enter a valid email address.');
         req.flash('formData', req.body);
-        return res.redirect('/register');
+        return req.session.save(() => res.redirect('/register'));
     }
     if (password.length < 6) {
         req.flash('error', 'Password must contain at least 6 characters.');
         req.flash('formData', req.body);
-        return res.redirect('/register');
+        return req.session.save(() => res.redirect('/register'));
     }
     
     return next();
@@ -192,11 +193,11 @@ app.post('/register', validateRegistration, (req, res) => {
                 : 'Registration is unavailable right now. Please try again.';
             req.flash('error', message);
             req.flash('formData', req.body);
-            return res.redirect('/register');
+            return req.session.save(() => res.redirect('/register'));
         }
 
         req.flash('success', 'Registration successful. You can now log in.');
-        return res.redirect('/login');
+        return req.session.save(() => res.redirect('/login'));
     });
 });
 
