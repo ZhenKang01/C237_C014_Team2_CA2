@@ -187,7 +187,7 @@ app.post('/register', validateRegistration, (req, res) => {
             console.error('Registration failed:', error.message);
             const message = error.code === 'ER_DUP_ENTRY'
                 ? 'An account with that email already exists.'
-                : 'Registration is unavailable right now. Please try again.';
+                : 'DB Error: ' + error.message;
             req.flash('error', message);
             req.flash('formData', req.body);
             return req.session.save(() => res.redirect('/register'));
