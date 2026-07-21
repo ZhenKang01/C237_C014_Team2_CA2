@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS `c237_014_team2_tutorlink` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
-USE `c237_014_team2_tutorlink`;
+CREATE DATABASE IF NOT EXISTS `c237_014_team0_userdb` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci;
+USE `c237_014_team0_userdb`;
 
 -- 1. Admins Table
 CREATE TABLE IF NOT EXISTS admins (
