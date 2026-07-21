@@ -8,8 +8,8 @@
     <nav class='nav shell'>
         <a class='brand' href='/'><span class='brand-mark'>T</span>TutorLink</a>
         <div class='nav-actions'>
-            <%% if (user) { %%><a href='/dashboard'>Dashboard</a><a class='button secondary' href='/logout'>Log out</a>
-            <%% } else { %%><a href='/login'>Log in</a><a class='button primary' href='/register'>Join TutorLink</a><%% } %%>
+            <% if (user) { %><a href='/dashboard'>Dashboard</a><a class='button secondary' href='/logout'>Log out</a>
+            <% } else { %><a href='/login'>Log in</a><a class='button primary' href='/register'>Join TutorLink</a><% } %>
         </div>
     </nav>
     <main>
@@ -19,8 +19,8 @@
                 <h1>Better support starts with the right connection.</h1>
                 <p>TutorLink gives students, teachers, and administrators one clear place to learn, guide, and keep the community running.</p>
                 <div class='hero-actions'>
-                    <a class='button primary large' href='<%%= user ? '/dashboard' : '/register' %%>'><%%= user ? 'Open my dashboard' : 'Create an account' %%></a>
-                    <%% if (!user) { %%><a class='button secondary large' href='/login'>I have an account</a><%% } %%>
+                    <a class='button primary large' href='<%= user ? '/dashboard' : '/register' %>'><%= user ? 'Open my dashboard' : 'Create an account' %></a>
+                    <% if (!user) { %><a class='button secondary large' href='/login'>I have an account</a><% } %>
                 </div>
             </div>
             <div class='hero-card'>

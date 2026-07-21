@@ -7,8 +7,8 @@
         <section class='auth-copy'><span class='eyebrow'>Welcome back</span><h1>Continue where you left off.</h1><p>Your dashboard automatically adapts to your Student, Teacher, or Admin role.</p></section>
         <section class='form-card'>
             <h2>Log in</h2><p>Enter your account details below.</p>
-            <%% if (errorMessages.length) { %%><div class='alert error'><%%= errorMessages.join(' ') %%></div><%% } %%>
-            <%% if (successMessages.length) { %%><div class='alert success'><%%= successMessages.join(' ') %%></div><%% } %%>
+            <% if (errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
+            <% if (successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
             <form action='/login' method='POST' class='form-stack'>
                 <label>Email address<input type='email' name='email' autocomplete='email' placeholder='you@example.com' required></label>
                 <label>Password<input type='password' name='password' autocomplete='current-password' placeholder='Enter your password' required></label>

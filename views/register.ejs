@@ -7,20 +7,20 @@
         <section class='auth-copy'><span class='eyebrow'>Join the community</span><h1>Make learning feel more connected.</h1><p>Students and teachers can register here. Admin accounts are provisioned separately.</p></section>
         <section class='form-card'>
             <h2>Create your account</h2><p>Tell us a little about yourself.</p>
-            <%% if (errorMessages.length) { %%><div class='alert error'><%%= errorMessages.join(' ') %%></div><%% } %%>
+            <% if (errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
             <form action='/register' method='POST' class='form-stack'>
                 <div class='form-row'>
-                    <label>Full name<input type='text' name='username' value='<%%= formData.username || '' %%>' required></label>
-                    <label>Email address<input type='email' name='email' value='<%%= formData.email || '' %%>' required></label>
+                    <label>Full name<input type='text' name='username' value='<%= formData.username || '' %>' required></label>
+                    <label>Email address<input type='email' name='email' value='<%= formData.email || '' %>' required></label>
                 </div>
                 <div class='form-row'>
-                    <label>Address<input type='text' name='address' value='<%%= formData.address || '' %%>' required></label>
-                    <label>Contact number<input type='tel' name='contact' value='<%%= formData.contact || '' %%>' required></label>
+                    <label>Address<input type='text' name='address' value='<%= formData.address || '' %>' required></label>
+                    <label>Contact number<input type='tel' name='contact' value='<%= formData.contact || '' %>' required></label>
                 </div>
                 <label>Password<input type='password' name='password' minlength='6' placeholder='At least 6 characters' required></label>
                 <div class='role-choice'>
-                    <label><input type='radio' name='role' value='student' <%%= formData.role === 'student' ? 'checked' : '' %%> required><span><b>Student</b><small>I want to learn</small></span></label>
-                    <label><input type='radio' name='role' value='teacher' <%%= formData.role === 'teacher' ? 'checked' : '' %%> required><span><b>Teacher</b><small>I want to guide learners</small></span></label>
+                    <label><input type='radio' name='role' value='student' <%= formData.role === 'student' ? 'checked' : '' %> required><span><b>Student</b><small>I want to learn</small></span></label>
+                    <label><input type='radio' name='role' value='teacher' <%= formData.role === 'teacher' ? 'checked' : '' %> required><span><b>Teacher</b><small>I want to guide learners</small></span></label>
                 </div>
                 <button class='button primary full' type='submit'>Create account</button>
             </form>
