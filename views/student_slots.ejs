@@ -3,68 +3,86 @@
 <head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Browse Slots - TutorLink</title><link rel='stylesheet' href='/css/app.css'></head>
 <body class='dashboard-page'>
     <nav class='nav shell'><a class='brand' href='/'><span class='brand-mark'>T</span>TutorLink</a><div class='user-nav'><b class='role-pill student-pill'>Student</b><span><strong><%= user.full_name %></strong><small><%= user.email %></small></span><a class='button secondary' href='/dashboard'>Dashboard</a><a class='button secondary' href='/profile'>Profile</a><a class='button secondary' href='/logout'>Log out</a></div></nav>
-    <main class='dashboard shell'>
-        <% if (errorMessages && errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
-        <% if (successMessages && successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
-        
-        <header class='dashboard-header'>
-            <div>
-                <span class='eyebrow'>Find Tutors</span>
-                <h1>Available Slots</h1>
-                <p>Browse available teaching slots and book them.</p>
-            </div>
-        </header>
-
-        <section class='panel'>
-            <% if (!slots || !slots.length) { %>
-                <div class='empty'>No slots are available right now. Please check back later!</div>
-            <% } else { %>
-                <div class='table-wrap'>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Teacher</th>
-                                <th>Subject & Location</th>
-                                <th>Date & Time</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% slots.forEach(slot => { %>
-                                <tr>
-                                    <td>
-                                        <b><%= slot.teacher_name %></b>
-                                    </td>
-                                    <td>
-                                        <b><%= slot.subject %></b>
-                                        <small><%= slot.location %></small>
-                                    </td>
-                                    <td>
-                                        <b><%= new Date(slot.slot_date).toLocaleDateString() %></b>
-                                        <small><%= slot.slot_time %></small>
-                                    </td>
-                                    <td>
-                                        <% if (slot.my_status) { %>
-                                            <span style='color:var(--green);font-weight:600;'>Booked (<%= slot.my_status %>)</span>
-                                        <% } else { %>
-                                            <form action='/student/slots/<%= slot.slot_id %>/book' method='POST' style='display:inline-flex; gap:8px;'>
-                                                <select name='education_level' required style='min-height:32px; padding:0 8px; font-size:13px;'>
-                                                    <option value='Primary'>Primary</option>
-                                                    <option value='Secondary'>Secondary</option>
-                                                    <option value='Tertiary'>Tertiary</option>
-                                                </select>
-                                                <input type='number' name='class_size' value='1' min='1' max='5' required style='width:60px; min-height:32px; padding:0 8px; font-size:13px;'>
-                                                <button type='submit' class='button primary' style='min-height:32px;padding:0 12px;font-size:13px;'>Book</button>
-                                            </form>
-                                        <% } %>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
+    <main class='dashboard shell with-sidebar'>
+        <aside class='sidebar'>
+            <nav class='sidebar-nav'>
+                <a href='/dashboard' class='sidebar-link'>
+                    <span class='icon'>🏠</span>
+                    Dashboard
+                </a>
+                <a href='/student/slots' class='sidebar-link active'>
+                    <span class='icon'>🔍</span>
+                    Find Tutors
+                </a>
+                <a href='/student/my-bookings' class='sidebar-link'>
+                    <span class='icon'>📅</span>
+                    My Bookings
+                </a>
+            </nav>
+        </aside>
+        <div class='dashboard-content'>
+            <% if (errorMessages && errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
+            <% if (successMessages && successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
+            
+            <header class='dashboard-header'>
+                <div>
+                    <span class='eyebrow'>Find Tutors</span>
+                    <h1>Available Slots</h1>
+                    <p>Browse available teaching slots and book them.</p>
                 </div>
-            <% } %>
-        </section>
+            </header>
+
+            <section class='panel'>
+                <% if (!slots || !slots.length) { %>
+                    <div class='empty'>No slots are available right now. Please check back later!</div>
+                <% } else { %>
+                    <div class='table-wrap'>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Teacher</th>
+                                    <th>Subject & Location</th>
+                                    <th>Date & Time</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% slots.forEach(slot => { %>
+                                    <tr>
+                                        <td>
+                                            <b><%= slot.teacher_name %></b>
+                                        </td>
+                                        <td>
+                                            <b><%= slot.subject %></b>
+                                            <small><%= slot.location %></small>
+                                        </td>
+                                        <td>
+                                            <b><%= new Date(slot.slot_date).toLocaleDateString() %></b>
+                                            <small><%= slot.slot_time %></small>
+                                        </td>
+                                        <td>
+                                            <% if (slot.my_status) { %>
+                                                <span style='color:var(--green);font-weight:600;'>Booked (<%= slot.my_status %>)</span>
+                                            <% } else { %>
+                                                <form action='/student/slots/<%= slot.slot_id %>/book' method='POST' style='display:inline-flex; gap:8px;'>
+                                                    <select name='education_level' required style='min-height:32px; padding:0 8px; font-size:13px;'>
+                                                        <option value='Primary'>Primary</option>
+                                                        <option value='Secondary'>Secondary</option>
+                                                        <option value='Tertiary'>Tertiary</option>
+                                                    </select>
+                                                    <input type='number' name='class_size' value='1' min='1' max='5' required style='width:60px; min-height:32px; padding:0 8px; font-size:13px;'>
+                                                    <button type='submit' class='button primary' style='min-height:32px;padding:0 12px;font-size:13px;'>Book</button>
+                                                </form>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } %>
+            </section>
+        </div>
     </main>
 </body>
 </html>

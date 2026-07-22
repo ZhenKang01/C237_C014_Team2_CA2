@@ -3,78 +3,96 @@
 <head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Student Bookings - TutorLink</title><link rel='stylesheet' href='/css/app.css'></head>
 <body class='dashboard-page'>
     <nav class='nav shell'><a class='brand' href='/'><span class='brand-mark'>T</span>TutorLink</a><div class='user-nav'><b class='role-pill teacher-pill'>Teacher</b><span><strong><%= user.full_name %></strong><small><%= user.email %></small></span><a class='button secondary' href='/dashboard'>Dashboard</a><a class='button secondary' href='/profile'>Profile</a><a class='button secondary' href='/logout'>Log out</a></div></nav>
-    <main class='dashboard shell'>
-        <% if (errorMessages && errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
-        <% if (successMessages && successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
-        
-        <header class='dashboard-header'>
-            <div>
-                <span class='eyebrow'>Approvals</span>
-                <h1>Student Bookings</h1>
-                <p>Review and approve bookings for your slots.</p>
-            </div>
-        </header>
-
-        <section class='panel'>
-            <% if (!bookings || !bookings.length) { %>
-                <div class='empty'>No students have booked your slots yet.</div>
-            <% } else { %>
-                <div class='table-wrap'>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Student</th>
-                                <th>Slot Details</th>
-                                <th>Booking Info</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% bookings.forEach(b => { %>
-                                <tr>
-                                    <td>
-                                        <b><%= b.student_name %></b>
-                                        <small><%= b.student_email %></small>
-                                    </td>
-                                    <td>
-                                        <b><%= b.subject %></b>
-                                        <small><%= new Date(b.slot_date).toLocaleDateString() %> <%= b.slot_time %></small>
-                                    </td>
-                                    <td>
-                                        <b>Lvl: <%= b.education_level %></b>
-                                        <small>Size: <%= b.class_size %></small>
-                                    </td>
-                                    <td>
-                                        <% if (b.status === 'pending') { %>
-                                            <span style='color:#b45309;font-weight:600;'>Pending</span>
-                                        <% } else if (b.status === 'approved') { %>
-                                            <span style='color:var(--green);font-weight:600;'>Approved</span>
-                                        <% } else { %>
-                                            <span style='color:red;font-weight:600;'><%= b.status.charAt(0).toUpperCase() + b.status.slice(1) %></span>
-                                        <% } %>
-                                    </td>
-                                    <td>
-                                        <% if (b.status === 'pending') { %>
-                                            <form action='/teacher/bookings/<%= b.booking_id %>/status' method='POST' style='display:inline;'>
-                                                <input type='hidden' name='status' value='approved'>
-                                                <button type='submit' class='button primary' style='min-height:32px;padding:0 12px;font-size:13px;'>Approve</button>
-                                            </form>
-                                            <form action='/teacher/bookings/<%= b.booking_id %>/status' method='POST' style='display:inline;'>
-                                                <input type='hidden' name='status' value='rejected'>
-                                                <button type='submit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;'>Reject</button>
-                                            </form>
-                                        <% } else { %>
-                                            <small style='color:var(--muted);'>Reviewed</small>
-                                        <% } %>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
+    <main class='dashboard shell with-sidebar'>
+        <aside class='sidebar'>
+            <nav class='sidebar-nav'>
+                <a href='/dashboard' class='sidebar-link'>
+                    <span class='icon'>🏠</span>
+                    Dashboard
+                </a>
+                <a href='/teacher/slots' class='sidebar-link'>
+                    <span class='icon'>📅</span>
+                    My Slots
+                </a>
+                <a href='/teacher/bookings' class='sidebar-link active'>
+                    <span class='icon'>📋</span>
+                    Student Bookings
+                </a>
+            </nav>
+        </aside>
+        <div class='dashboard-content'>
+            <% if (errorMessages && errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
+            <% if (successMessages && successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
+            
+            <header class='dashboard-header'>
+                <div>
+                    <span class='eyebrow'>Approvals</span>
+                    <h1>Student Bookings</h1>
+                    <p>Review and approve bookings for your slots.</p>
                 </div>
-            <% } %>
-        </section>
+            </header>
+
+            <section class='panel'>
+                <% if (!bookings || !bookings.length) { %>
+                    <div class='empty'>No students have booked your slots yet.</div>
+                <% } else { %>
+                    <div class='table-wrap'>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Slot Details</th>
+                                    <th>Booking Info</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% bookings.forEach(b => { %>
+                                    <tr>
+                                        <td>
+                                            <b><%= b.student_name %></b>
+                                            <small><%= b.student_email %></small>
+                                        </td>
+                                        <td>
+                                            <b><%= b.subject %></b>
+                                            <small><%= new Date(b.slot_date).toLocaleDateString() %> <%= b.slot_time %></small>
+                                        </td>
+                                        <td>
+                                            <b>Lvl: <%= b.education_level %></b>
+                                            <small>Size: <%= b.class_size %></small>
+                                        </td>
+                                        <td>
+                                            <% if (b.status === 'pending') { %>
+                                                <span style='color:#b45309;font-weight:600;'>Pending</span>
+                                            <% } else if (b.status === 'approved') { %>
+                                                <span style='color:var(--green);font-weight:600;'>Approved</span>
+                                            <% } else { %>
+                                                <span style='color:red;font-weight:600;'><%= b.status.charAt(0).toUpperCase() + b.status.slice(1) %></span>
+                                            <% } %>
+                                        </td>
+                                        <td>
+                                            <% if (b.status === 'pending') { %>
+                                                <form action='/teacher/bookings/<%= b.booking_id %>/status' method='POST' style='display:inline;'>
+                                                    <input type='hidden' name='status' value='approved'>
+                                                    <button type='submit' class='button primary' style='min-height:32px;padding:0 12px;font-size:13px;'>Approve</button>
+                                                </form>
+                                                <form action='/teacher/bookings/<%= b.booking_id %>/status' method='POST' style='display:inline;'>
+                                                    <input type='hidden' name='status' value='rejected'>
+                                                    <button type='submit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;'>Reject</button>
+                                                </form>
+                                            <% } else { %>
+                                                <small style='color:var(--muted);'>Reviewed</small>
+                                            <% } %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } %>
+            </section>
+        </div>
     </main>
 </body>
 </html>

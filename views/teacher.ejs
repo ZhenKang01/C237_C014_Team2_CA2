@@ -3,14 +3,35 @@
 <head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Teacher dashboard - TutorLink</title><link rel='stylesheet' href='/css/app.css'></head>
 <body class='dashboard-page'>
     <nav class='nav shell'><a class='brand' href='/'><span class='brand-mark'>T</span>TutorLink</a><div class='user-nav'><b class='role-pill teacher-pill'>Teacher</b><span><strong><%= user.full_name %></strong><small><%= user.email %></small></span><a class='button secondary' href='/profile'>Profile</a><a class='button secondary' href='/logout'>Log out</a></div></nav>
-    <main class='dashboard shell'>
-        <% if (errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
-        <% if (successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
-        <header class='dashboard-header'><div><span class='eyebrow'>Teacher workspace</span><h1>Ready to make an impact, <%= user.full_name.split(' ')[0] %>?</h1><p>Your dedicated space for guiding students and organising teaching.</p></div><div class='profile-mark teacher-avatar'>TC</div></header>
-        <section class='action-grid'>
-            <article><span>01</span><h3>My Slots</h3><p>Manage your teaching schedule and available slots.</p><a class='button secondary' href='/teacher/slots'>Manage Slots</a></article>
-            <article><span>02</span><h3>Student Bookings</h3><p>Review and approve bookings from students for your slots.</p><a class='button secondary' href='/teacher/bookings'>View Bookings</a></article>
-        </section>
+    <main class='dashboard shell with-sidebar'>
+        <aside class='sidebar'>
+            <nav class='sidebar-nav'>
+                <a href='/dashboard' class='sidebar-link active'>
+                    <span class='icon'>🏠</span>
+                    Dashboard
+                </a>
+                <a href='/teacher/slots' class='sidebar-link'>
+                    <span class='icon'>📅</span>
+                    My Slots
+                </a>
+                <a href='/teacher/bookings' class='sidebar-link'>
+                    <span class='icon'>📋</span>
+                    Student Bookings
+                </a>
+            </nav>
+        </aside>
+        <div class='dashboard-content'>
+            <% if (errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
+            <% if (successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
+            <header class='dashboard-header'><div><span class='eyebrow'>Teacher workspace</span><h1>Ready to make an impact, <%= user.full_name.split(' ')[0] %>?</h1><p>Your dedicated space for guiding students and organising teaching.</p></div><div class='profile-mark teacher-avatar'>TC</div></header>
+            
+            <section class='panel'>
+                <header>
+                    <h2>Welcome to your Dashboard</h2>
+                    <p>Select an option from the sidebar to manage your schedule and view student bookings.</p>
+                </header>
+            </section>
+        </div>
     </main>
 </body>
 </html>

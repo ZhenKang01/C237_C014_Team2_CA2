@@ -3,42 +3,63 @@
 <head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Admin dashboard - TutorLink</title><link rel='stylesheet' href='/css/app.css'></head>
 <body class='dashboard-page'>
     <nav class='nav shell'><a class='brand' href='/'><span class='brand-mark'>T</span>TutorLink</a><div class='user-nav'><b class='role-pill admin-pill'>Admin</b><span><strong><%= user.full_name %></strong><small><%= user.email %></small></span><a class='button secondary' href='/profile'>Profile</a><a class='button secondary' href='/logout'>Log out</a></div></nav>
-    <main class='dashboard shell'>
-        <% if (errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
-        <% if (successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
-        <header class='dashboard-header'><div><span class='eyebrow'>Administration workspace</span><h1>Good to see you, <%= user.full_name.split(' ')[0] %>.</h1><p>Monitor the TutorLink community and keep each role organised.</p></div><div class='total'><small>Total users</small><strong><%= users.length %></strong></div></header>
-        <section class='stat-grid'>
-            <article><strong><%= users.filter(item => item.role === 'admin').length %></strong><small>Administrators</small></article>
-            <article><strong><%= users.filter(item => item.role === 'teacher').length %></strong><small>Teachers</small></article>
-            <article><strong><%= users.filter(item => item.role === 'student').length %></strong><small>Students</small></article>
-        </section>
-        <section class='panel'><header><h2>User directory</h2><p>Registered accounts and assigned roles.</p></header>
-            <% if (loadError) { %><div class='empty'><%= loadError %></div>
-            <% } else if (!users.length) { %><div class='empty'>No users are registered yet.</div>
-            <% } else { %><div class='table-wrap'>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Role</th>
-                            <th>Contact</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <% users.forEach(u => { %>
+    <main class='dashboard shell with-sidebar'>
+        <aside class='sidebar'>
+            <nav class='sidebar-nav'>
+                <a href='/dashboard' class='sidebar-link active'>
+                    <span class='icon'>🏠</span>
+                    Dashboard
+                </a>
+                <a href='/admin/users/new' class='sidebar-link'>
+                    <span class='icon'>➕</span>
+                    Add User
+                </a>
+            </nav>
+        </aside>
+        <div class='dashboard-content'>
+            <% if (errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
+            <% if (successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
+            <header class='dashboard-header'><div><span class='eyebrow'>Administration workspace</span><h1>Good to see you, <%= user.full_name.split(' ')[0] %>.</h1><p>Monitor the TutorLink community and keep each role organised.</p></div><div class='total'><small>Total users</small><strong><%= users.length %></strong></div><div><a class='button primary' href='/admin/users/new'>+ Add User</a></div></header>
+            <section class='stat-grid'>
+                <article><strong><%= users.filter(item => item.role === 'admin').length %></strong><small>Administrators</small></article>
+                <article><strong><%= users.filter(item => item.role === 'teacher').length %></strong><small>Teachers</small></article>
+                <article><strong><%= users.filter(item => item.role === 'student').length %></strong><small>Students</small></article>
+            </section>
+            <section class='panel'><header><h2>User directory</h2><p>Registered accounts and assigned roles.</p></header>
+                <% if (loadError) { %><div class='empty'><%= loadError %></div>
+                <% } else if (!users.length) { %><div class='empty'>No users are registered yet.</div>
+                <% } else { %><div class='table-wrap'>
+                    <table>
+                        <thead>
                             <tr>
-                                <td>
-                                    <b><%= u.full_name %></b>
-                                    <small><%= u.email %></small>
-                                </td>
-                                <td><span class='role-pill <%= u.role.toLowerCase() %>-pill'><%= u.role %></span></td>
-                                <td><%= u.phone_number %></td>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Contact</th>
+                                <th>Actions</th>
                             </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-            </div><% } %>
-        </section>
+                        </thead>
+                        <tbody>
+                            <% users.forEach(u => { %>
+                                <tr>
+                                    <td>
+                                        <b><%= u.full_name %></b>
+                                        <small><%= u.email %></small>
+                                    </td>
+                                    <td><span class='role-pill <%= u.role.toLowerCase() %>-pill'><%= u.role %></span></td>
+                                    <td><%= u.phone_number %></td>
+                                    <td>
+                                        <a href='/admin/users/<%= u.role.toLowerCase() %>/<%= u.student_id || u.teacher_id || u.admin_id %>/edit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;'>Edit</a>
+                                        <form action='/admin/users/<%= u.role.toLowerCase() %>/<%= u.student_id || u.teacher_id || u.admin_id %>/delete' method='POST' style='display:inline;' onsubmit='return confirm("Delete this user?");'>
+                                            <button type='submit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;color:red;'>Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </div><% } %>
+            </section>
+        </div>
     </main>
 </body>
 </html>

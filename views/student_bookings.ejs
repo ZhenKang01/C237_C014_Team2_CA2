@@ -3,74 +3,141 @@
 <head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>My Bookings - TutorLink</title><link rel='stylesheet' href='/css/app.css'></head>
 <body class='dashboard-page'>
     <nav class='nav shell'><a class='brand' href='/'><span class='brand-mark'>T</span>TutorLink</a><div class='user-nav'><b class='role-pill student-pill'>Student</b><span><strong><%= user.full_name %></strong><small><%= user.email %></small></span><a class='button secondary' href='/dashboard'>Dashboard</a><a class='button secondary' href='/profile'>Profile</a><a class='button secondary' href='/logout'>Log out</a></div></nav>
-    <main class='dashboard shell'>
-        <% if (errorMessages && errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
-        <% if (successMessages && successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
-        
-        <header class='dashboard-header'>
-            <div>
-                <span class='eyebrow'>My Bookings</span>
-                <h1>Your Schedule</h1>
-                <p>Keep track of the slots you have booked.</p>
-            </div>
-        </header>
-
-        <section class='panel'>
-            <% if (!bookings || !bookings.length) { %>
-                <div class='empty'>You haven't booked any slots yet. <a href='/student/slots'>Browse available slots</a>.</div>
-            <% } else { %>
-                <div class='table-wrap'>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Teacher</th>
-                                <th>Subject & Location</th>
-                                <th>Date & Time</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% bookings.forEach(b => { %>
-                                <tr>
-                                    <td>
-                                        <b><%= b.teacher_name %></b>
-                                    </td>
-                                    <td>
-                                        <b><%= b.subject %></b>
-                                        <small><%= b.location %></small>
-                                    </td>
-                                    <td>
-                                        <b><%= new Date(b.slot_date).toLocaleDateString() %></b>
-                                        <small><%= b.slot_time %></small>
-                                    </td>
-                                    <td>
-                                        <% if (b.status === 'pending') { %>
-                                            <span style='color:#b45309;font-weight:600;'>Pending</span>
-                                        <% } else if (b.status === 'approved') { %>
-                                            <span style='color:var(--green);font-weight:600;'>Approved</span>
-                                        <% } else if (b.status === 'rejected') { %>
-                                            <span style='color:red;font-weight:600;'>Rejected</span>
-                                        <% } else { %>
-                                            <span style='color:var(--muted);font-weight:600;'>Cancelled</span>
-                                        <% } %>
-                                    </td>
-                                    <td>
-                                        <% if (b.status !== 'cancelled' && b.status !== 'rejected') { %>
-                                            <form action='/student/bookings/<%= b.booking_id %>/cancel' method='POST' style='display:inline;' onsubmit='return confirm("Cancel this booking?");'>
-                                                <button type='submit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;color:red;'>Cancel</button>
-                                            </form>
-                                        <% } else { %>
-                                            -
-                                        <% } %>
-                                    </td>
-                                </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
+    <main class='dashboard shell with-sidebar'>
+        <aside class='sidebar'>
+            <nav class='sidebar-nav'>
+                <a href='/dashboard' class='sidebar-link'>
+                    <span class='icon'>🏠</span>
+                    Dashboard
+                </a>
+                <a href='/student/slots' class='sidebar-link'>
+                    <span class='icon'>🔍</span>
+                    Find Tutors
+                </a>
+                <a href='/student/my-bookings' class='sidebar-link active'>
+                    <span class='icon'>📅</span>
+                    My Bookings
+                </a>
+            </nav>
+        </aside>
+        <div class='dashboard-content'>
+            <% if (errorMessages && errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
+            <% if (successMessages && successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
+            
+            <header class='dashboard-header'>
+                <div>
+                    <span class='eyebrow'>My Bookings</span>
+                    <h1>Your Schedule</h1>
+                    <p>Keep track of the slots you have booked.</p>
                 </div>
-            <% } %>
-        </section>
+            </header>
+
+            <section class='panel'>
+                <% if (!bookings || !bookings.length) { %>
+                    <div class='empty'>You haven't booked any slots yet. <a href='/student/slots'>Browse available slots</a>.</div>
+                <% } else { %>
+                    <div class="calendar-container">
+                        <div class="calendar-controls">
+                            <button id="prev-month" class="nav-btn">&larr; Previous</button>
+                            <h2 id="calendar-month-year">Month Year</h2>
+                            <button id="next-month" class="nav-btn">Next &rarr;</button>
+                        </div>
+                        <div class="calendar-header">
+                            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                        </div>
+                        <div id="calendar-grid" class="calendar-grid">
+                            <!-- Calendar days injected via JS -->
+                        </div>
+                    </div>
+                    
+                    <script>
+                        // Inject bookings from EJS to JS safely
+                        const bookings = <%- JSON.stringify(bookings) %>;
+                        
+                        let currentDate = new Date();
+                        
+                        const calendarGrid = document.getElementById('calendar-grid');
+                        const monthYearText = document.getElementById('calendar-month-year');
+                        
+                        function renderCalendar(date) {
+                            calendarGrid.innerHTML = '';
+                            const year = date.getFullYear();
+                            const month = date.getMonth();
+                            
+                            // Set header text
+                            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                            monthYearText.textContent = `${monthNames[month]} ${year}`;
+                            
+                            const firstDay = new Date(year, month, 1).getDay();
+                            const daysInMonth = new Date(year, month + 1, 0).getDate();
+                            
+                            // Pad empty days before start of month
+                            for (let i = 0; i < firstDay; i++) {
+                                const emptyDay = document.createElement('div');
+                                emptyDay.className = 'calendar-day empty-day';
+                                calendarGrid.appendChild(emptyDay);
+                            }
+                            
+                            const today = new Date();
+                            const isCurrentMonth = (today.getFullYear() === year && today.getMonth() === month);
+                            
+                            // Render actual days
+                            for (let day = 1; day <= daysInMonth; day++) {
+                                const dayCell = document.createElement('div');
+                                dayCell.className = 'calendar-day';
+                                
+                                if (isCurrentMonth && day === today.getDate()) {
+                                    dayCell.classList.add('today');
+                                }
+                                
+                                const dayNum = document.createElement('span');
+                                dayNum.className = 'day-number';
+                                dayNum.textContent = day;
+                                dayCell.appendChild(dayNum);
+                                
+                                // Find events for this day
+                                const dayEvents = bookings.filter(b => {
+                                    const bDate = new Date(b.slot_date);
+                                    return bDate.getFullYear() === year && bDate.getMonth() === month && bDate.getDate() === day;
+                                });
+                                
+                                dayEvents.forEach(evt => {
+                                    const evtEl = document.createElement('div');
+                                    evtEl.className = \`calendar-event status-\${evt.status}\`;
+                                    
+                                    const title = document.createElement('span');
+                                    title.className = 'event-title';
+                                    title.textContent = evt.subject;
+                                    
+                                    const time = document.createElement('span');
+                                    time.className = 'event-time';
+                                    time.textContent = evt.slot_time;
+                                    
+                                    evtEl.appendChild(title);
+                                    evtEl.appendChild(time);
+                                    dayCell.appendChild(evtEl);
+                                });
+                                
+                                calendarGrid.appendChild(dayCell);
+                            }
+                        }
+                        
+                        document.getElementById('prev-month').addEventListener('click', () => {
+                            currentDate.setMonth(currentDate.getMonth() - 1);
+                            renderCalendar(currentDate);
+                        });
+                        
+                        document.getElementById('next-month').addEventListener('click', () => {
+                            currentDate.setMonth(currentDate.getMonth() + 1);
+                            renderCalendar(currentDate);
+                        });
+                        
+                        // Initial render
+                        renderCalendar(currentDate);
+                    </script>
+                <% } %>
+            </section>
+        </div>
     </main>
 </body>
 </html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Edit Booking - TutorLink</title><link rel='stylesheet' href='/css/app.css'></head>
+<body class='dashboard-page'>
+    <nav class='nav shell'><a class='brand' href='/'><span class='brand-mark'>T</span>TutorLink</a><div class='user-nav'><b class='role-pill student-pill'>Student</b><span><strong><%= user.full_name %></strong><small><%= user.email %></small></span><a class='button secondary' href='/student/my-bookings'>My Bookings</a><a class='button secondary' href='/logout'>Log out</a></div></nav>
+    <main class='dashboard shell'>
+        <% if (errorMessages && errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
+        <header class='dashboard-header'>
+            <div>
+                <span class='eyebrow'>My Bookings</span>
+                <h1>Edit Booking Details</h1>
+                <p>Update your booking preferences.</p>
+            </div>
+            <div><a class='button secondary' href='/student/my-bookings'>Back to Bookings</a></div>
+        </header>
+
+        <section class='panel' style='max-width:600px;'>
+            <form method='POST' class='form'>
+                <div class='form-group'>
+                    <label>Education Level</label>
+                    <select name='education_level' class='input' required>
+                        <option value='Primary' <%= booking.education_level === 'Primary' ? 'selected' : '' %>>Primary</option>
+                        <option value='Secondary' <%= booking.education_level === 'Secondary' ? 'selected' : '' %>>Secondary</option>
+                        <option value='JC' <%= booking.education_level === 'JC' ? 'selected' : '' %>>JC</option>
+                        <option value='University' <%= booking.education_level === 'University' ? 'selected' : '' %>>University</option>
+                        <option value='General' <%= booking.education_level === 'General' ? 'selected' : '' %>>General</option>
+                    </select>
+                </div>
+                <div class='form-group'>
+                    <label>Class Size</label>
+                    <input type='number' name='class_size' class='input' value='<%= booking.class_size %>' min='1' max='10' required>
+                </div>
+                <button type='submit' class='button primary' style='width:100%'>Update Booking</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>
