@@ -267,6 +267,61 @@ app.get('/dashboard', checkAuthenticated, (req, res) => {
     res.redirect(dashboardFor(req.session.user.role));
 });
 
+// --- PROFILE ROUTES ---
+
+app.get('/profile', checkAuthenticated, (req, res) => {
+    res.render('profile', { formData: req.flash('formData')[0] || req.session.user });
+});
+
+app.post('/profile', checkAuthenticated, (req, res) => {
+    const full_name = (req.body.full_name || '').trim();
+    const email = (req.body.email || '').trim().toLowerCase();
+    const phone_number = (req.body.phone_number || '').trim();
+    const password = req.body.password || '';
+
+    if (!full_name || !email || !phone_number) {
+        req.flash('error', 'Name, email, and phone number are required.');
+        req.flash('formData', req.body);
+        return req.session.save(() => res.redirect('/profile'));
+    }
+
+    const { role, id } = req.session.user;
+    const table = role + 's';
+    const idField = role + '_id';
+
+    let sql, params;
+    if (password) {
+        if (password.length < 6) {
+            req.flash('error', 'Password must contain at least 6 characters.');
+            req.flash('formData', req.body);
+            return req.session.save(() => res.redirect('/profile'));
+        }
+        sql = `UPDATE ${table} SET full_name = ?, email = ?, phone_number = ?, password_hash = SHA1(?) WHERE ${idField} = ?`;
+        params = [full_name, email, phone_number, password, id];
+    } else {
+        sql = `UPDATE ${table} SET full_name = ?, email = ?, phone_number = ? WHERE ${idField} = ?`;
+        params = [full_name, email, phone_number, id];
+    }
+
+    db.query(sql, params, (error) => {
+        if (error) {
+            console.error('Profile update failed:', error.message);
+            const message = error.code === 'ER_DUP_ENTRY'
+                ? 'An account with that email already exists.'
+                : 'Failed to update profile: ' + error.message;
+            req.flash('error', message);
+            req.flash('formData', req.body);
+            return req.session.save(() => res.redirect('/profile'));
+        }
+
+        req.session.user.full_name = full_name;
+        req.session.user.email = email;
+        req.session.user.phone_number = phone_number;
+        req.flash('success', 'Profile updated successfully.');
+        return req.session.save(() => res.redirect('/profile'));
+    });
+});
+
 app.get('/admin', checkAuthenticated, checkAdmin, (req, res) => {
     db.query('SELECT *, "Admin" as role FROM admins', (err, admins) => {
         db.query('SELECT *, "Teacher" as role FROM teachers', (err, teachers) => {

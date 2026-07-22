@@ -2,7 +2,7 @@
 <html lang='en'>
 <head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Teacher dashboard - TutorLink</title><link rel='stylesheet' href='/css/app.css'></head>
 <body class='dashboard-page'>
-    <nav class='nav shell'><a class='brand' href='/'><span class='brand-mark'>T</span>TutorLink</a><div class='user-nav'><b class='role-pill teacher-pill'>Teacher</b><span><strong><%= user.full_name %></strong><small><%= user.email %></small></span><a class='button secondary' href='/logout'>Log out</a></div></nav>
+    <nav class='nav shell'><a class='brand' href='/'><span class='brand-mark'>T</span>TutorLink</a><div class='user-nav'><b class='role-pill teacher-pill'>Teacher</b><span><strong><%= user.full_name %></strong><small><%= user.email %></small></span><a class='button secondary' href='/profile'>Profile</a><a class='button secondary' href='/logout'>Log out</a></div></nav>
     <main class='dashboard shell'>
         <% if (errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
         <% if (successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
