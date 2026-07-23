@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>All Schedules - TutorLink</title>
+    <link rel='stylesheet' href='/css/app.css'>
+</head>
+<body class='dashboard-page'>
+    <nav class='nav shell'>
+        <a class='brand' href='/'><span class='brand-mark'>T</span>TutorLink</a>
+        <div class='user-nav'>
+            <b class='role-pill admin-pill'>Admin</b>
+            <span><strong><%= user.full_name %></strong><small><%= user.email %></small></span>
+            <a class='button secondary' href='/profile'>Profile</a>
+            <a class='button secondary' href='/logout'>Log out</a>
+        </div>
+    </nav>
+    <main class='dashboard shell with-sidebar'>
+        <aside class='sidebar'>
+            <nav class='sidebar-nav'>
+                <a href='/dashboard' class='sidebar-link'>
+                    <span class='icon'>🏠</span>
+                    Dashboard
+                </a>
+                <a href='/admin/users/new' class='sidebar-link'>
+                    <span class='icon'>➕</span>
+                    Add User
+                </a>
+                <a href='/admin/addschedule' class='sidebar-link'>
+                    <span class='icon'>📅</span>
+                    Add Schedule
+                </a>
+                <a href='/admin/schedules' class='sidebar-link active'>
+                    <span class='icon'>📋</span>
+                    All Schedules
+                </a>
+            </nav>
+        </aside>
+        <div class='dashboard-content'>
+            <% if (errorMessages && errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
+            <% if (successMessages && successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
+            
+            <header class='dashboard-header'>
+                <div>
+                    <span class='eyebrow'>Administration</span>
+                    <h1>Teaching Schedules</h1>
+                    <p>Manage all schedules on TutorLink.</p>
+                </div>
+                <div>
+                    <a class='button primary' href='/admin/addschedule'>+ Add Slot</a>
+                </div>
+            </header>
+
+            <section class='panel'>
+                <% if (!slots || !slots.length) { %>
+                    <div class='empty'>No slots have been created.</div>
+                <% } else { %>
+                    <div class='table-wrap'>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Teacher</th>
+                                    <th>Subject & Location</th>
+                                    <th>Date & Time</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% slots.forEach(slot => { %>
+                                <tr>
+                                    <td>
+                                        <b><%= slot.teacher_name %></b>
+                                    </td>
+                                    <td>
+                                        <b><%= slot.subject %></b>
+                                        <small><%= slot.location %></small>
+                                    </td>
+                                    <td>
+                                        <b><%= new Date(slot.slot_date).toLocaleDateString() %></b>
+                                        <small><%= slot.slot_time %> - <%= slot.end_time || '--:--' %></small>
+                                    </td>
+                                    <td>
+                                        <% if (slot.is_available) { %>
+                                            <span style="color:var(--green);font-weight:600;">Available</span>
+                                        <% } else { %>
+                                            <span style="color:var(--muted);">Unavailable</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <a href='/admin/schedules/<%= slot.slot_id %>/edit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;'>Edit</a>
+                                        <form action='/admin/schedules/<%= slot.slot_id %>/delete' method='POST' style='display:inline;' onsubmit='return confirm("Delete this slot?");'>
+                                            <button type='submit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;color:red;'>Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                <% } %>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

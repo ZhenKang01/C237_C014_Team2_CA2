@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Edit Schedule - TutorLink</title>
+    <link rel='stylesheet' href='/css/app.css'>
+</head>
+<body class='dashboard-page'>
+    <nav class='nav shell'>
+        <a class='brand' href='/'><span class='brand-mark'>T</span>TutorLink</a>
+        <div class='user-nav'>
+            <b class='role-pill admin-pill'>Admin</b>
+            <span><strong><%= user.full_name %></strong><small><%= user.email %></small></span>
+            <a class='button secondary' href='/profile'>Profile</a>
+            <a class='button secondary' href='/logout'>Log out</a>
+        </div>
+    </nav>
+    <main class='dashboard shell with-sidebar'>
+        <aside class='sidebar'>
+            <nav class='sidebar-nav'>
+                <a href='/dashboard' class='sidebar-link'>
+                    <span class='icon'>🏠</span>
+                    Dashboard
+                </a>
+                <a href='/admin/users/new' class='sidebar-link'>
+                    <span class='icon'>➕</span>
+                    Add User
+                </a>
+                <a href='/admin/addschedule' class='sidebar-link'>
+                    <span class='icon'>📅</span>
+                    Add Schedule
+                </a>
+                <a href='/admin/schedules' class='sidebar-link active'>
+                    <span class='icon'>📋</span>
+                    All Schedules
+                </a>
+            </nav>
+        </aside>
+        <div class='dashboard-content'>
+            <% if (errorMessages && errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
+            <% if (successMessages && successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
+            
+            <header class='dashboard-header'>
+                <div>
+                    <span class='eyebrow'>Administration</span>
+                    <h1>Edit Teaching Slot</h1>
+                    <p>Update the details of this slot.</p>
+                </div>
+                <div><a class='button secondary' href='/admin/schedules'>Back to Schedule</a></div>
+            </header>
+
+            <section class='panel' style='max-width:600px;'>
+                <form action='/admin/schedules/<%= slot.slot_id %>/edit' method='POST' class='form'>
+                    <div class='form-group'>
+                        <label>Teacher</label>
+                        <select name='teacher_id' class='input' required>
+                            <% teachers.forEach(teacher => { %>
+                                <option value='<%= teacher.teacher_id %>' <%= teacher.teacher_id === slot.teacher_id ? 'selected' : '' %>><%= teacher.full_name %></option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <div class='form-group'>
+                        <label>Subject</label>
+                        <input type='text' name='subject' class='input' value='<%= slot.subject %>' required>
+                    </div>
+                    <div class='form-group'>
+                        <label>Location</label>
+                        <input type='text' name='location' class='input' value='<%= slot.location %>' required>
+                    </div>
+                    <div class='form-group'>
+                        <label>Date</label>
+                        <input type='date' name='slot_date' class='input' value='<%= new Date(slot.slot_date).toISOString().split("T")[0] %>' required>
+                    </div>
+                    <div class='form-row' style='display: flex; gap: 1rem;'>
+                        <div class='form-group' style='flex: 1;'>
+                            <label>Start Time</label>
+                            <input type='time' name='slot_time' class='input' value='<%= slot.slot_time %>' required>
+                        </div>
+                        <div class='form-group' style='flex: 1;'>
+                            <label>End Time</label>
+                            <input type='time' name='end_time' class='input' value='<%= slot.end_time %>' required>
+                        </div>
+                    </div>
+                    <button type='submit' class='button primary' style='width:100%'>Update Slot</button>
+                </form>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

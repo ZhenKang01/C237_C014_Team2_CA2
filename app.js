@@ -509,6 +509,59 @@ app.post('/admin/addschedule', checkAuthenticated, checkAdmin, (req, res) => {
     });
 });
 
+app.get('/admin/schedules', checkAuthenticated, checkAdmin, (req, res) => {
+    const sql = `SELECT ts.*, t.full_name as teacher_name
+    FROM teacher_slots ts
+    JOIN teachers t ON ts.teacher_id = t.teacher_id
+    ORDER BY slot_date, slot_time`;
+    db.query(sql, (error, slots) => {
+        if (error) {
+            req.flash('error', 'Could not load schedules.');
+            return res.redirect('/admin');
+        }
+        res.render('admin_schedules', { slots });
+    });
+});
+
+app.get('/admin/schedules/:id/edit', checkAuthenticated, checkAdmin, (req, res) => {
+    const sql = `SELECT ts.*, t.full_name as teacher_name
+    FROM teacher_slots ts
+    JOIN teachers t ON ts.teacher_id = t.teacher_id
+    WHERE slot_id = ?`;
+    db.query(sql, [req.params.id], (error, results) => {
+        if (error || results.length === 0) {
+            req.flash('error', 'Could not load slot data.');
+            return res.redirect('/admin/schedules');
+        }
+        db.query('SELECT * FROM teachers', (error, teachers) => {
+            res.render('admin_schedule_edit', { slot: results[0], teachers });
+        });
+    });
+});
+
+app.post('/admin/schedules/:id/edit', checkAuthenticated, checkAdmin, (req, res) => {
+    const slot_id = req.params.id;
+    const { teacher_id, subject, location, slot_date, slot_time, end_time } = req.body;
+    const sql = 'UPDATE teacher_slots SET teacher_id = ?, subject = ?, location = ?, slot_date = ?, slot_time = ?, end_time = ? WHERE slot_id = ?';
+    db.query(sql, [teacher_id, subject, location, slot_date, slot_time, end_time, slot_id], (error) => {
+        if (error) {
+            req.flash('error', 'Failed to update schedule.');
+        } else {
+            req.flash('success', 'Slot updated successfully.');
+        }
+        res.redirect('/admin/schedules');
+    });
+});
+
+app.post('/admin/schedules/:id/delete', checkAuthenticated, checkAdmin, (req, res) => {
+    const sql = 'DELETE FROM teacher_slots WHERE slot_id = ?';
+    db.query(sql, [req.params.id], (error) => {
+        if (error) req.flash('error', 'Failed to delete slot.');
+        else req.flash('success', 'Slot deleted successfully.');
+        res.redirect('/admin/schedules');
+    });
+});
+
 app.get('/teacher', checkAuthenticated, checkTeacher, (req, res) => {
     res.render('teacher');
 });
