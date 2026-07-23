@@ -446,11 +446,18 @@ app.post('/admin/users/:role/:id/delete', checkAuthenticated, checkAdmin, (req, 
     
     if (!['admins', 'teachers', 'students'].includes(table)) return res.redirect('/admin');
 
-    const sql = `DELETE FROM ${table} WHERE ${idField} = ?`;
-    db.query(sql, [id], (error) => {
-        if (error) req.flash('error', 'Failed to delete user.');
-        else req.flash('success', 'User deleted successfully.');
-        res.redirect('/admin');
+    db.query(`SELECT email FROM ${table} WHERE ${idField} = ?`, [id], (err, results) => {
+        if (!err && results.length > 0 && results[0].email === 'admin@test.com') {
+            req.flash('error', 'The master admin account (admin@test.com) cannot be deleted.');
+            return res.redirect('/admin');
+        }
+
+        const sql = `DELETE FROM ${table} WHERE ${idField} = ?`;
+        db.query(sql, [id], (error) => {
+            if (error) req.flash('error', 'Failed to delete user.');
+            else req.flash('success', 'User deleted successfully.');
+            res.redirect('/admin');
+        });
     });
 });
 app.get('/admin/addschedule', checkAuthenticated, checkAdmin, (req, res) => {
