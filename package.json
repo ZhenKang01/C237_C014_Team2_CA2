@@ -10,11 +10,24 @@
     "connect-flash": "^0.1.1",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
-    "express": "^4.19.2",
+    "express": "^4.22.2",
     "express-session": "^1.19.0",
-    "mysql2": "^3.23.0"
+    "mysql2": "^3.23.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
-  }
+  },
+  "description": "1. `middleware/auth.js` created - `checkAuthenticated`, `checkAdmin`,\r    `checkTeacher`, `checkStudent` were referenced in `app.js` but never\r    defined, which crashed every protected route.\r 2. DB credentials moved out of `app.js` into `.env` (see `.env.example`).\r    **Rotate the Azure MySQL password** - it was previously hardcoded in\r    plaintext in a file that may end up in your GitHub repo.\r 3. `register.ejs` now has a role selector (`student`/`teacher`) - it was\r    missing entirely, so every registration inserted a `NULL` role.\r 4. `register.ejs`'s name input used `name=\"fullname\"` but `app.js` reads\r    `req.body.username` - fixed the mismatch so the name actually saves.\r 5. `/teacher` route + `teacher.ejs` added - was completely missing even\r    though two team members (Jereil, Hein) are assigned to Teacher features.\r 6. Login now redirects by role (`/admin`, `/teacher`, `/student`) instead\r    of sending everyone to one shared `/dashboard` view.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/25022342/C237_C014_Team2_CA2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/25022342/C237_C014_Team2_CA2/issues"
+  },
+  "homepage": "https://github.com/25022342/C237_C014_Team2_CA2#readme"
 }
