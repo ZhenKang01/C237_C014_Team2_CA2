@@ -23,13 +23,20 @@
         <div class='dashboard-content'>
             <% if (errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
             <% if (successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
-            <header class='dashboard-header'><div><span class='eyebrow'>Teacher workspace</span><h1>Ready to make an impact, <%= user.full_name.split(' ')[0] %>?</h1><p>Your dedicated space for guiding students and organising teaching.</p></div><div class='profile-mark teacher-avatar'>TC</div></header>
+            <header class='dashboard-header'><div><span class='eyebrow'>Teacher workspace</span><h1>Ready to make an impact, <span class="capitalize"><%= user.full_name.split(' ')[0] %></span>?</h1><p>Your dedicated space for guiding students and organising teaching.</p></div><div class='profile-mark teacher-avatar'>TC</div></header>
             
-            <section class='panel'>
-                <header>
-                    <h2>Welcome to your Dashboard</h2>
-                    <p>Select an option from the sidebar to manage your schedule and view student bookings.</p>
-                </header>
+            <section class='stat-grid' style='margin-bottom: 32px;'>
+                <article><strong><%= totalSlots %></strong><small>Total Slots</small></article>
+                <article><strong><%= pendingBookings %></strong><small>Pending Approvals</small></article>
+                <article>
+                    <% if (nextSession) { %>
+                        <strong><%= new Date(nextSession.slot_date).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' }) %></strong>
+                        <small><%= nextSession.slot_time %></small>
+                    <% } else { %>
+                        <strong>None</strong>
+                        <small>Next Session</small>
+                    <% } %>
+                </article>
             </section>
         </div>
     </main>

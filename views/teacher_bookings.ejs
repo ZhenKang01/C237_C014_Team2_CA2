@@ -62,12 +62,12 @@
                                 <% bookings.forEach(b => { %>
                                     <tr class='booking-row' data-student='<%= b.student_name.toLowerCase() %>' data-status='<%= b.status.toLowerCase() %>'>
                                         <td>
-                                            <b><%= b.student_name %></b>
+                                            <b class="capitalize"><%= b.student_name %></b>
                                             <small><%= b.student_email %></small>
                                         </td>
                                         <td>
                                             <b><%= b.subject %></b>
-                                            <small><%= new Date(b.slot_date).toLocaleDateString() %> <%= b.slot_time %></small>
+                                            <small><%= new Date(b.slot_date).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' }) %> <%= b.slot_time %></small>
                                         </td>
                                         <td>
                                             <b>Size: <%= b.class_size %></b>

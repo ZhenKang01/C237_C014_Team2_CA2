@@ -50,7 +50,7 @@
                             <% users.forEach(u => { %>
                                 <tr class="user-row" data-role="<%= u.role.toLowerCase() %>">
                                     <td>
-                                        <b><%= u.full_name %></b>
+                                        <b class="capitalize"><%= u.full_name %></b>
                                         <small><%= u.email %></small>
                                     </td>
                                     <td><span class='role-pill <%= u.role.toLowerCase() %>-pill'><%= u.role %></span></td>

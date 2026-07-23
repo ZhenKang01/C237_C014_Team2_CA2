@@ -345,7 +345,7 @@ input::placeholder {
 .mini-card { position: relative; display: flex; width: 86%; align-items: center; gap: 14px; border: 1px solid rgba(31,104,79,.1); border-radius: 16px; margin-bottom: 28px; padding: 16px; background: rgba(255,255,255,.9); box-shadow: 0 12px 30px rgba(31,66,53,.08); transition: var(--transition); }
 .mini-card:hover { transform: translateX(10px); }
 .offset-card { margin-left: 14%; }
-.mini-card span, .profile-mark { display: grid; place-items: center; border-radius: 14px; font-size: 12px; font-weight: 800; }
+.mini-card span, .profile-mark { display: grid; place-items: center; border-radius: 14px; font-size: 12px; font-weight: 800; min-width: 46px; height: 46px; }
 .mini-card span { min-width: 46px; height: 46px; }
 .mini-card b, .mini-card small { display: block; line-height: 1.4; }
 .mini-card small { color: var(--muted); font-weight: 500; }
@@ -604,3 +604,5 @@ tr:hover td { background: var(--paper); }
 
 .event-title { font-weight: 700; display: block; margin-bottom: 2px; }
 .event-time { color: var(--muted); display: block; }
+
+.capitalize { text-transform: capitalize; }

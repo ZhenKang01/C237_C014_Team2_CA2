@@ -74,7 +74,7 @@
                                             <small><%= slot.location %></small>
                                         </td>
                                         <td>
-                                            <b><%= new Date(slot.slot_date).toLocaleDateString() %></b>
+                                            <b><%= new Date(slot.slot_date).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' }) %></b>
                                             <small><%= slot.slot_time %> - <%= slot.end_time || '--:--' %></small>
                                         </td>
                                         <td>

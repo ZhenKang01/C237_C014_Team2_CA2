@@ -562,11 +562,41 @@ app.post('/admin/schedules/:id/delete', checkAuthenticated, checkAdmin, (req, re
 });
 
 app.get('/teacher', checkAuthenticated, checkTeacher, (req, res) => {
-    res.render('teacher');
+    const tid = req.session.user.id;
+    const q1 = 'SELECT COUNT(*) AS total_slots FROM teacher_slots WHERE teacher_id = ?';
+    const q2 = 'SELECT COUNT(*) AS pending_bookings FROM bookings b JOIN teacher_slots ts ON b.slot_id = ts.slot_id WHERE ts.teacher_id = ? AND b.status = "pending"';
+    const q3 = 'SELECT ts.slot_date, ts.slot_time FROM bookings b JOIN teacher_slots ts ON b.slot_id = ts.slot_id WHERE ts.teacher_id = ? AND b.status = "approved" AND ts.slot_date >= CURDATE() ORDER BY ts.slot_date ASC, ts.slot_time ASC LIMIT 1';
+    
+    db.query(q1, [tid], (e1, r1) => {
+        db.query(q2, [tid], (e2, r2) => {
+            db.query(q3, [tid], (e3, r3) => {
+                res.render('teacher', {
+                    totalSlots: r1?.[0]?.total_slots || 0,
+                    pendingBookings: r2?.[0]?.pending_bookings || 0,
+                    nextSession: r3?.[0] || null
+                });
+            });
+        });
+    });
 });
 
 app.get('/student', checkAuthenticated, checkStudent, (req, res) => {
-    res.render('student');
+    const sid = req.session.user.id;
+    const q1 = 'SELECT COUNT(*) AS total_bookings FROM bookings WHERE student_id = ?';
+    const q2 = 'SELECT COUNT(*) AS pending_approvals FROM bookings WHERE student_id = ? AND status = "pending"';
+    const q3 = 'SELECT ts.slot_date, ts.slot_time FROM bookings b JOIN teacher_slots ts ON b.slot_id = ts.slot_id WHERE b.student_id = ? AND b.status = "approved" AND ts.slot_date >= CURDATE() ORDER BY ts.slot_date ASC, ts.slot_time ASC LIMIT 1';
+    
+    db.query(q1, [sid], (e1, r1) => {
+        db.query(q2, [sid], (e2, r2) => {
+            db.query(q3, [sid], (e3, r3) => {
+                res.render('student', {
+                    totalBookings: r1?.[0]?.total_bookings || 0,
+                    pendingApprovals: r2?.[0]?.pending_approvals || 0,
+                    nextSession: r3?.[0] || null
+                });
+            });
+        });
+    });
 });
 
 // --- TEACHER SLOTS ROUTES ---
