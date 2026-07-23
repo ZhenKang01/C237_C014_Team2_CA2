@@ -62,7 +62,17 @@
                     </div>
                     <div class='form-group'>
                         <label>Subject</label>
-                        <input type='text' name='subject' class='input' value='<%= slot.subject %>' required>
+                        <select name='subject' class='input' required>
+                            <option value=''>Select a Subject</option>
+                            <option value='G133 - Project Communication' <%= slot.subject === 'G133 - Project Communication' ? 'selected' : '' %>>G133 - Project Communication</option>
+                            <option value='C202 - Systems Analysis and Design' <%= slot.subject === 'C202 - Systems Analysis and Design' ? 'selected' : '' %>>C202 - Systems Analysis and Design</option>
+                            <option value='C203 - Web Application Development' <%= slot.subject === 'C203 - Web Application Development' ? 'selected' : '' %>>C203 - Web Application Development</option>
+                            <option value='C206 - Software Development Process' <%= slot.subject === 'C206 - Software Development Process' ? 'selected' : '' %>>C206 - Software Development Process</option>
+                            <option value='C236 - Web Security' <%= slot.subject === 'C236 - Web Security' ? 'selected' : '' %>>C236 - Web Security</option>
+                            <option value='C237 - Software Application Development' <%= slot.subject === 'C237 - Software Application Development' ? 'selected' : '' %>>C237 - Software Application Development</option>
+                            <option value='C240 - Front-End Web Development' <%= slot.subject === 'C240 - Front-End Web Development' ? 'selected' : '' %>>C240 - Front-End Web Development</option>
+                            <option value='C300 - Project' <%= slot.subject === 'C300 - Project' ? 'selected' : '' %>>C300 - Project</option>
+                        </select>
                     </div>
                     <div class='form-group'>
                         <label>Location</label>

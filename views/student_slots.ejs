@@ -65,12 +65,7 @@
                                                 <span style='color:var(--green);font-weight:600;'>Booked (<%= slot.my_status %>)</span>
                                             <% } else { %>
                                                 <form action='/student/slots/<%= slot.slot_id %>/book' method='POST' style='display:inline-flex; gap:8px;'>
-                                                    <select name='education_level' required style='min-height:32px; padding:0 8px; font-size:13px;'>
-                                                        <option value='Primary'>Primary</option>
-                                                        <option value='Secondary'>Secondary</option>
-                                                        <option value='Tertiary'>Tertiary</option>
-                                                    </select>
-                                                    <input type='number' name='class_size' value='1' min='1' max='5' required style='width:60px; min-height:32px; padding:0 8px; font-size:13px;'>
+                                                    <input type='number' name='class_size' value='1' min='1' required style='width:60px; min-height:32px; padding:0 8px; font-size:13px;'>
                                                     <button type='submit' class='button primary' style='min-height:32px;padding:0 12px;font-size:13px;'>Book</button>
                                                 </form>
                                             <% } %>

@@ -50,7 +50,6 @@ CREATE TABLE IF NOT EXISTS bookings (
     booking_id INT AUTO_INCREMENT PRIMARY KEY,
     slot_id INT NOT NULL,
     student_id INT NOT NULL,
-    education_level VARCHAR(50) NOT NULL,
     class_size INT NOT NULL,
     status ENUM('pending', 'approved', 'rejected', 'cancelled') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

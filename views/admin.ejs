@@ -29,11 +29,11 @@
             <% if (successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
             <header class='dashboard-header'><div><span class='eyebrow'>Administration workspace</span><h1>Good to see you, <%= user.full_name.split(' ')[0] %>.</h1><p>Monitor the TutorLink community and keep each role organised.</p></div><div class='total'><small>Total users</small><strong><%= users.length %></strong></div></header>
             <section class='stat-grid'>
-                <article><strong><%= users.filter(item => item.role === 'admin').length %></strong><small>Administrators</small></article>
-                <article><strong><%= users.filter(item => item.role === 'teacher').length %></strong><small>Teachers</small></article>
-                <article><strong><%= users.filter(item => item.role === 'student').length %></strong><small>Students</small></article>
+                <article onclick="filterUsers('admin')" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" title="Click to filter by Administrators"><strong><%= users.filter(item => item.role.toLowerCase() === 'admin').length %></strong><small>Administrators</small></article>
+                <article onclick="filterUsers('teacher')" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" title="Click to filter by Teachers"><strong><%= users.filter(item => item.role.toLowerCase() === 'teacher').length %></strong><small>Teachers</small></article>
+                <article onclick="filterUsers('student')" style="cursor: pointer; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'" title="Click to filter by Students"><strong><%= users.filter(item => item.role.toLowerCase() === 'student').length %></strong><small>Students</small></article>
             </section>
-            <section class='panel'><header><h2>User directory</h2><p>Registered accounts and assigned roles.</p></header>
+            <section class='panel'><header style="display: flex; justify-content: space-between; align-items: center;"><div><h2>User directory</h2><p>Registered accounts and assigned roles.</p></div><button class="button secondary" onclick="filterUsers('all')" style="min-height: 32px; font-size: 13px;">Show All</button></header>
                 <% if (loadError) { %><div class='empty'><%= loadError %></div>
                 <% } else if (!users.length) { %><div class='empty'>No users are registered yet.</div>
                 <% } else { %><div class='table-wrap'>
@@ -47,7 +47,7 @@
                         </thead>
                         <tbody>
                             <% users.forEach(u => { %>
-                                <tr>
+                                <tr class="user-row" data-role="<%= u.role.toLowerCase() %>">
                                     <td>
                                         <b><%= u.full_name %></b>
                                         <small><%= u.email %></small>
@@ -62,5 +62,19 @@
             </section>
         </div>
     </main>
+    <script>
+        function filterUsers(role) {
+            const rows = document.querySelectorAll('.user-row');
+            rows.forEach(row => {
+                if (role === 'all' || row.dataset.role === role) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            // Optional: scroll to the user directory if clicked from the top
+            document.querySelector('.panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    </script>
 </body>
 </html>
