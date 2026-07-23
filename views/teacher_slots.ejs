@@ -35,6 +35,23 @@
                 </div>
             </header>
 
+            <section class='panel' style='margin-bottom: 24px;'>
+                <form id='filterForm' class='form' onsubmit='return false;'>
+                    <div class='form-group'>
+                        <label>Search Subject</label>
+                        <input type='text' id='searchSubject' class='input' placeholder='Enter subject' oninput='filterSlots()'>
+                    </div>
+                    <div class='form-group'>
+                        <label>Filter Location</label>
+                        <input type='text' id='filterLocation' class='input' placeholder='Enter location' oninput='filterSlots()'>
+                    </div>
+                    <div style='margin-top: 16px;'>
+                        <button class='button primary' onclick='filterSlots()'>Search</button>
+                        <button class='button secondary' onclick='clearFilters()' style='margin-left: 8px;'>Clear</button>
+                    </div>
+                </form>
+            </section>
+
             <section class='panel'>
                 <% if (!slots || !slots.length) { %>
                     <div class='empty'>You haven't created any slots yet. <a href='/teacher/slots/new'>Create your first slot</a>.</div>
@@ -58,7 +75,7 @@
                                         </td>
                                         <td>
                                             <b><%= new Date(slot.slot_date).toLocaleDateString() %></b>
-                                            <small><%= slot.slot_time %></small>
+                                            <small><%= slot.slot_time %> - <%= slot.end_time || '--:--' %></small>
                                         </td>
                                         <td>
                                             <% if (slot.is_available) { %>
@@ -82,5 +99,37 @@
             </section>
         </div>
     </main>
+
+    <script>
+        function filterSlots() {
+            const subjectQuery = document.getElementById('searchSubject').value.toLowerCase();
+            const locationQuery = document.getElementById('filterLocation').value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                // The first cell contains Subject and Location
+                const cell = row.querySelector('td:first-child');
+                if (!cell) return;
+                
+                const subject = cell.querySelector('b').textContent.toLowerCase();
+                const location = cell.querySelector('small').textContent.toLowerCase();
+                
+                const matchesSubject = subject.includes(subjectQuery);
+                const matchesLocation = location.includes(locationQuery);
+                
+                if (matchesSubject && matchesLocation) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('searchSubject').value = '';
+            document.getElementById('filterLocation').value = '';
+            filterSlots();
+        }
+    </script>
 </body>
 </html>

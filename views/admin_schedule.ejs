@@ -17,52 +17,76 @@
         </div>
     </nav>
 
-    <main class='dashboard shell'>
-        <% if (errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
-        <% if (successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
+    <main class='dashboard shell with-sidebar'>
+        <aside class='sidebar'>
+            <nav class='sidebar-nav'>
+                <a href='/dashboard' class='sidebar-link'>
+                    <span class='icon'>🏠</span>
+                    Dashboard
+                </a>
+                <a href='/admin/users/new' class='sidebar-link'>
+                    <span class='icon'>➕</span>
+                    Add User
+                </a>
+                <a href='/admin/addschedule' class='sidebar-link active'>
+                    <span class='icon'>📅</span>
+                    Add Schedule
+                </a>
+            </nav>
+        </aside>
+        <div class='dashboard-content'>
+            <% if (errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
+            <% if (successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
 
-        <section class='panel'>
-            <header>
-                <h2>Create a teaching session</h2>
-                <p>Only an admin can add a schedule for a teacher.</p>
-            </header>
+            <section class='panel'>
+                <header>
+                    <h2>Create a teaching session</h2>
+                    <p>Only an admin can add a schedule for a teacher.</p>
+                </header>
 
-            <form class='form-grid' method='POST' action='/admin/addschedule'>
-                <label>
-                    Teacher
-                    <select name='teacher_id' required>
-                        <option value=''>Select a teacher</option>
-                        <% teachers.forEach(teacher => { %>
-                            <option value='<%= teacher.teacher_id %>'><%= teacher.full_name %> (<%= teacher.email %>)</option>
-                        <% }) %>
-                    </select>
-                </label>
+                <form class='form-grid' method='POST' action='/admin/addschedule'>
+                    <label>
+                        Teacher
+                        <select name='teacher_id' required>
+                            <option value=''>Select a teacher</option>
+                            <% teachers.forEach(teacher => { %>
+                                <option value='<%= teacher.teacher_id %>'><%= teacher.full_name %> (<%= teacher.email %>)</option>
+                            <% }) %>
+                        </select>
+                    </label>
 
-                <label>
-                    Subject
-                    <input type='text' name='subject' placeholder='Mathematics' required>
-                </label>
+                    <label>
+                        Subject
+                        <input type='text' name='subject' placeholder='Mathematics' required>
+                    </label>
 
-                <label>
-                    Location
-                    <input type='text' name='location' placeholder='Online / Classroom 2' required>
-                </label>
+                    <label>
+                        Location
+                        <input type='text' name='location' placeholder='Online / Classroom 2' required>
+                    </label>
 
-                <label>
-                    Date
-                    <input type='date' name='slot_date' required>
-                </label>
+                    <label>
+                        Date
+                        <input type='date' name='slot_date' required>
+                    </label>
 
-                <label>
-                    Time
-                    <input type='time' name='slot_time' required>
-                </label>
+                    <div style='display: flex; gap: 1rem;'>
+                        <label style='flex: 1;'>
+                            Start Time
+                            <input type='time' name='slot_time' required>
+                        </label>
+                        <label style='flex: 1;'>
+                            End Time
+                            <input type='time' name='end_time' required>
+                        </label>
+                    </div>
 
-                <div class='form-actions'>
-                    <button class='button' type='submit'>Add schedule</button>
-                </div>
-            </form>
-        </section>
+                    <div class='form-actions'>
+                        <button class='button' type='submit'>Add schedule</button>
+                    </div>
+                </form>
+            </section>
+        </div>
     </main>
 </body>
 </html>

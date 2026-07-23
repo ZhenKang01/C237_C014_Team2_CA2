@@ -3,50 +3,67 @@
 <head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title><%= targetUser.email ? 'Edit User' : 'Add User' %> - TutorLink</title><link rel='stylesheet' href='/css/app.css'></head>
 <body class='dashboard-page'>
     <nav class='nav shell'><a class='brand' href='/'><span class='brand-mark'>T</span>TutorLink</a><div class='user-nav'><b class='role-pill admin-pill'>Admin</b><span><strong><%= user.full_name %></strong><small><%= user.email %></small></span><a class='button secondary' href='/dashboard'>Dashboard</a><a class='button secondary' href='/profile'>Profile</a><a class='button secondary' href='/logout'>Log out</a></div></nav>
-    <main class='dashboard shell'>
-        <% if (errorMessages && errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
-        
-        <header class='dashboard-header'>
-            <div>
-                <span class='eyebrow'>Administration</span>
-                <h1><%= targetUser.email ? 'Edit User' : 'Add New User' %></h1>
-                <p>Manage user account details and roles.</p>
-            </div>
-            <div><a class='button secondary' href='/admin'>Back to Users</a></div>
-        </header>
+    <main class='dashboard shell with-sidebar'>
+        <aside class='sidebar'>
+            <nav class='sidebar-nav'>
+                <a href='/dashboard' class='sidebar-link'>
+                    <span class='icon'>🏠</span>
+                    Dashboard
+                </a>
+                <a href='/admin/users/new' class='sidebar-link active'>
+                    <span class='icon'>➕</span>
+                    Add User
+                </a>
+                <a href='/admin/addschedule' class='sidebar-link'>
+                    <span class='icon'>📅</span>
+                    Add Schedule
+                </a>
+            </nav>
+        </aside>
+        <div class='dashboard-content'>
+            <% if (errorMessages && errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
+            
+            <header class='dashboard-header'>
+                <div>
+                    <span class='eyebrow'>Administration</span>
+                    <h1><%= targetUser.email ? 'Edit User' : 'Add New User' %></h1>
+                    <p>Manage user account details and roles.</p>
+                </div>
+            </header>
 
-        <section class='panel' style='max-width:600px;'>
-            <form method='POST' class='form'>
-                <div class='form-group'>
-                    <label>Role</label>
-                    <select name='role' class='input' <%= targetUser.email ? 'disabled' : 'required' %>>
-                        <option value='student' <%= role === 'student' ? 'selected' : '' %>>Student</option>
-                        <option value='teacher' <%= role === 'teacher' ? 'selected' : '' %>>Teacher</option>
-                        <option value='admin' <%= role === 'admin' ? 'selected' : '' %>>Admin</option>
-                    </select>
-                    <% if (targetUser.email) { %>
-                        <input type="hidden" name="role" value="<%= role %>">
-                    <% } %>
-                </div>
-                <div class='form-group'>
-                    <label>Full Name</label>
-                    <input type='text' name='full_name' class='input' value='<%= targetUser.full_name || "" %>' required>
-                </div>
-                <div class='form-group'>
-                    <label>Email</label>
-                    <input type='email' name='email' class='input' value='<%= targetUser.email || "" %>' required>
-                </div>
-                <div class='form-group'>
-                    <label>Phone Number</label>
-                    <input type='text' name='phone_number' class='input' value='<%= targetUser.phone_number || "" %>' required>
-                </div>
-                <div class='form-group'>
-                    <label>Password <%= targetUser.email ? '(Leave blank to keep current)' : '' %></label>
-                    <input type='password' name='password' class='input' <%= targetUser.email ? '' : 'required' %>>
-                </div>
-                <button type='submit' class='button primary' style='width:100%'><%= targetUser.email ? 'Update User' : 'Create User' %></button>
-            </form>
-        </section>
+            <section class='panel' style='max-width:600px;'>
+                <form method='POST' class='form'>
+                    <div class='form-group'>
+                        <label>Role</label>
+                        <select name='role' class='input' <%= targetUser.email ? 'disabled' : 'required' %>>
+                            <option value='student' <%= role === 'student' ? 'selected' : '' %>>Student</option>
+                            <option value='teacher' <%= role === 'teacher' ? 'selected' : '' %>>Teacher</option>
+                            <option value='admin' <%= role === 'admin' ? 'selected' : '' %>>Admin</option>
+                        </select>
+                        <% if (targetUser.email) { %>
+                            <input type="hidden" name="role" value="<%= role %>">
+                        <% } %>
+                    </div>
+                    <div class='form-group'>
+                        <label>Full Name</label>
+                        <input type='text' name='full_name' class='input' value='<%= targetUser.full_name || "" %>' required>
+                    </div>
+                    <div class='form-group'>
+                        <label>Email</label>
+                        <input type='email' name='email' class='input' value='<%= targetUser.email || "" %>' required>
+                    </div>
+                    <div class='form-group'>
+                        <label>Phone Number</label>
+                        <input type='text' name='phone_number' class='input' value='<%= targetUser.phone_number || "" %>' required>
+                    </div>
+                    <div class='form-group'>
+                        <label>Password <%= targetUser.email ? '(Leave blank to keep current)' : '' %></label>
+                        <input type='password' name='password' class='input' <%= targetUser.email ? '' : 'required' %>>
+                    </div>
+                    <button type='submit' class='button primary' style='width:100%'><%= targetUser.email ? 'Update User' : 'Create User' %></button>
+                </form>
+            </section>
+        </div>
     </main>
 </body>
 </html>

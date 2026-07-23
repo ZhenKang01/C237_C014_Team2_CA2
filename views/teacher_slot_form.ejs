@@ -15,12 +15,15 @@
                 <label>Location
                     <input type='text' name='location' placeholder='e.g. Online, Library Room A' required>
                 </label>
+                <label>Date
+                    <input type='date' name='slot_date' required>
+                </label>
                 <div class='form-row'>
-                    <label>Date
-                        <input type='date' name='slot_date' required>
-                    </label>
-                    <label>Time
+                    <label>Start Time
                         <input type='time' name='slot_time' required>
+                    </label>
+                    <label>End Time
+                        <input type='time' name='end_time' required>
                     </label>
                 </div>
                 <button class='button primary full' type='submit'>Create Slot</button>

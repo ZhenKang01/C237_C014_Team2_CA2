@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS teacher_slots (
     location VARCHAR(100) NOT NULL,
     slot_date DATE NOT NULL,
     slot_time TIME NOT NULL,
+    end_time TIME NOT NULL,
     is_available TINYINT(1) DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id) ON DELETE CASCADE

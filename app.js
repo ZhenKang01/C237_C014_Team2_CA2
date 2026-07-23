@@ -362,6 +362,97 @@ app.get('/admin', checkAuthenticated, checkAdmin, (req, res) => {
     });
 });
 
+app.get('/admin/users/new', checkAuthenticated, checkAdmin, (req, res) => {
+    res.render('admin_user_form', { targetUser: {}, role: 'student' });
+});
+
+app.post('/admin/users/new', checkAuthenticated, checkAdmin, (req, res) => {
+    const { full_name, email, phone_number, password, role } = req.body;
+    if (!full_name || !email || !phone_number || !password || !role) {
+        req.flash('error', 'All fields are required.');
+        return res.redirect('/admin/users/new');
+    }
+    const table = role + 's';
+    const sql = `INSERT INTO ${table} (full_name, email, phone_number, password_hash) VALUES (?, ?, ?, SHA1(?))`;
+    
+    // Check if table is valid
+    if (!['admins', 'teachers', 'students'].includes(table)) {
+        req.flash('error', 'Invalid role.');
+        return res.redirect('/admin/users/new');
+    }
+
+    db.query(sql, [full_name, email, phone_number, password], (error) => {
+        if (error) {
+            req.flash('error', error.code === 'ER_DUP_ENTRY' ? 'Email already exists.' : 'Failed to create user.');
+            return res.redirect('/admin/users/new');
+        }
+        req.flash('success', 'User created successfully.');
+        res.redirect('/admin');
+    });
+});
+
+app.get('/admin/users/:role/:id/edit', checkAuthenticated, checkAdmin, (req, res) => {
+    const { role, id } = req.params;
+    const table = role + 's';
+    const idField = role + '_id';
+    
+    if (!['admins', 'teachers', 'students'].includes(table)) return res.redirect('/admin');
+
+    const sql = `SELECT * FROM ${table} WHERE ${idField} = ?`;
+    db.query(sql, [id], (error, results) => {
+        if (error || results.length === 0) {
+            req.flash('error', 'User not found.');
+            return res.redirect('/admin');
+        }
+        res.render('admin_user_form', { targetUser: results[0], role });
+    });
+});
+
+app.post('/admin/users/:role/:id/edit', checkAuthenticated, checkAdmin, (req, res) => {
+    const { role, id } = req.params;
+    const { full_name, email, phone_number, password } = req.body;
+    const table = role + 's';
+    const idField = role + '_id';
+    
+    if (!['admins', 'teachers', 'students'].includes(table)) return res.redirect('/admin');
+    if (!full_name || !email || !phone_number) {
+        req.flash('error', 'Name, email, and phone number are required.');
+        return res.redirect(`/admin/users/${role}/${id}/edit`);
+    }
+
+    let sql, params;
+    if (password) {
+        sql = `UPDATE ${table} SET full_name = ?, email = ?, phone_number = ?, password_hash = SHA1(?) WHERE ${idField} = ?`;
+        params = [full_name, email, phone_number, password, id];
+    } else {
+        sql = `UPDATE ${table} SET full_name = ?, email = ?, phone_number = ? WHERE ${idField} = ?`;
+        params = [full_name, email, phone_number, id];
+    }
+
+    db.query(sql, params, (error) => {
+        if (error) {
+            req.flash('error', error.code === 'ER_DUP_ENTRY' ? 'Email already exists.' : 'Failed to update user.');
+            return res.redirect(`/admin/users/${role}/${id}/edit`);
+        }
+        req.flash('success', 'User updated successfully.');
+        res.redirect('/admin');
+    });
+});
+
+app.post('/admin/users/:role/:id/delete', checkAuthenticated, checkAdmin, (req, res) => {
+    const { role, id } = req.params;
+    const table = role + 's';
+    const idField = role + '_id';
+    
+    if (!['admins', 'teachers', 'students'].includes(table)) return res.redirect('/admin');
+
+    const sql = `DELETE FROM ${table} WHERE ${idField} = ?`;
+    db.query(sql, [id], (error) => {
+        if (error) req.flash('error', 'Failed to delete user.');
+        else req.flash('success', 'User deleted successfully.');
+        res.redirect('/admin');
+    });
+});
 app.get('/admin/addschedule', checkAuthenticated, checkAdmin, (req, res) => {
     db.query('SELECT teacher_id, full_name, email FROM teachers ORDER BY full_name ASC', (error, teachers) => {
         if (error) {
@@ -374,9 +465,9 @@ app.get('/admin/addschedule', checkAuthenticated, checkAdmin, (req, res) => {
 });
 
 app.post('/admin/addschedule', checkAuthenticated, checkAdmin, (req, res) => {
-    const { teacher_id, subject, location, slot_date, slot_time } = req.body;
+    const { teacher_id, subject, location, slot_date, slot_time, end_time } = req.body;
 
-    if (!teacher_id || !subject || !location || !slot_date || !slot_time) {
+    if (!teacher_id || !subject || !location || !slot_date || !slot_time || !end_time) {
         req.flash('error', 'All schedule fields are required.');
         return res.redirect('/admin/addschedule');
     }
@@ -404,8 +495,8 @@ app.post('/admin/addschedule', checkAuthenticated, checkAdmin, (req, res) => {
                 return res.redirect('/admin/addschedule');
             }
 
-            const insertSql = 'INSERT INTO teacher_slots (teacher_id, subject, location, slot_date, slot_time, is_available) VALUES (?, ?, ?, ?, ?, 1)';
-            db.query(insertSql, [teacher_id, subject.trim(), location.trim(), slot_date, slot_time], (insertError) => {
+            const insertSql = 'INSERT INTO teacher_slots (teacher_id, subject, location, slot_date, slot_time, end_time, is_available) VALUES (?, ?, ?, ?, ?, ?, 1)';
+            db.query(insertSql, [teacher_id, subject.trim(), location.trim(), slot_date, slot_time, end_time], (insertError) => {
                 if (insertError) {
                     req.flash('error', 'Failed to create the session schedule.');
                     return res.redirect('/admin/addschedule');
@@ -444,9 +535,9 @@ app.get('/teacher/slots/new', checkAuthenticated, checkTeacher, (req, res) => {
 });
 
 app.post('/teacher/slots/new', checkAuthenticated, checkTeacher, (req, res) => {
-    const { subject, location, slot_date, slot_time } = req.body;
-    const sql = 'INSERT INTO teacher_slots (teacher_id, subject, location, slot_date, slot_time) VALUES (?, ?, ?, ?, ?)';
-    db.query(sql, [req.session.user.id, subject, location, slot_date, slot_time], (error) => {
+    const { subject, location, slot_date, slot_time, end_time } = req.body;
+    const sql = 'INSERT INTO teacher_slots (teacher_id, subject, location, slot_date, slot_time, end_time) VALUES (?, ?, ?, ?, ?, ?)';
+    db.query(sql, [req.session.user.id, subject, location, slot_date, slot_time, end_time], (error) => {
         if (error) {
             req.flash('error', 'Failed to create slot.');
             return res.redirect('/teacher/slots/new');
@@ -465,11 +556,35 @@ app.post('/teacher/slots/:id/delete', checkAuthenticated, checkTeacher, (req, re
     });
 });
 
+app.get('/teacher/slots/:id/edit', checkAuthenticated, checkTeacher, (req, res) => {
+    const sql = 'SELECT * FROM teacher_slots WHERE slot_id = ? AND teacher_id = ?';
+    db.query(sql, [req.params.id, req.session.user.id], (error, results) => {
+        if (error || results.length === 0) {
+            req.flash('error', 'Slot not found.');
+            return res.redirect('/teacher/slots');
+        }
+        res.render('teacher_slot_edit', { slot: results[0] });
+    });
+});
+
+app.post('/teacher/slots/:id/edit', checkAuthenticated, checkTeacher, (req, res) => {
+    const { subject, location, slot_date, slot_time, end_time } = req.body;
+    const sql = 'UPDATE teacher_slots SET subject = ?, location = ?, slot_date = ?, slot_time = ?, end_time = ? WHERE slot_id = ? AND teacher_id = ?';
+    db.query(sql, [subject, location, slot_date, slot_time, end_time, req.params.id, req.session.user.id], (error) => {
+        if (error) {
+            req.flash('error', 'Failed to update slot.');
+            return res.redirect(`/teacher/slots/${req.params.id}/edit`);
+        }
+        req.flash('success', 'Slot updated successfully.');
+        res.redirect('/teacher/slots');
+    });
+});
+
 // --- TEACHER BOOKING APPROVALS ---
 
 app.get('/teacher/bookings', checkAuthenticated, checkTeacher, (req, res) => {
     const sql = `
-        SELECT b.*, ts.subject, ts.slot_date, ts.slot_time, s.full_name as student_name, s.email as student_email
+        SELECT b.*, ts.subject, ts.slot_date, ts.slot_time, ts.end_time, s.full_name as student_name, s.email as student_email
         FROM bookings b
         JOIN teacher_slots ts ON b.slot_id = ts.slot_id
         JOIN students s ON b.student_id = s.student_id
@@ -546,7 +661,7 @@ app.post('/student/slots/:id/book', checkAuthenticated, checkStudent, (req, res)
 
 app.get('/student/my-bookings', checkAuthenticated, checkStudent, (req, res) => {
     const sql = `
-        SELECT b.*, ts.subject, ts.location, ts.slot_date, ts.slot_time, t.full_name as teacher_name
+        SELECT b.*, ts.subject, ts.location, ts.slot_date, ts.slot_time, ts.end_time, t.full_name as teacher_name
         FROM bookings b
         JOIN teacher_slots ts ON b.slot_id = ts.slot_id
         JOIN teachers t ON ts.teacher_id = t.teacher_id
@@ -567,6 +682,30 @@ app.post('/student/bookings/:id/cancel', checkAuthenticated, checkStudent, (req,
     db.query(sql, [req.params.id, req.session.user.id], (error) => {
         if (error) req.flash('error', 'Failed to cancel booking.');
         else req.flash('success', 'Booking cancelled.');
+        res.redirect('/student/my-bookings');
+    });
+});
+
+app.get('/student/bookings/:id/edit', checkAuthenticated, checkStudent, (req, res) => {
+    const sql = 'SELECT * FROM bookings WHERE booking_id = ? AND student_id = ? AND status = "pending"';
+    db.query(sql, [req.params.id, req.session.user.id], (error, results) => {
+        if (error || results.length === 0) {
+            req.flash('error', 'Booking not found or cannot be edited.');
+            return res.redirect('/student/my-bookings');
+        }
+        res.render('student_booking_edit', { booking: results[0] });
+    });
+});
+
+app.post('/student/bookings/:id/edit', checkAuthenticated, checkStudent, (req, res) => {
+    const { education_level, class_size } = req.body;
+    const sql = 'UPDATE bookings SET education_level = ?, class_size = ? WHERE booking_id = ? AND student_id = ? AND status = "pending"';
+    db.query(sql, [education_level, class_size, req.params.id, req.session.user.id], (error) => {
+        if (error) {
+            req.flash('error', 'Failed to update booking.');
+            return res.redirect(`/student/bookings/${req.params.id}/edit`);
+        }
+        req.flash('success', 'Booking updated successfully.');
         res.redirect('/student/my-bookings');
     });
 });
