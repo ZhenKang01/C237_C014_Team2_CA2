@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     student_id INT NOT NULL,
     class_size INT NOT NULL,
     description TEXT,
+    reject_reason TEXT,
     status ENUM('pending', 'approved', 'rejected', 'cancelled') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (slot_id) REFERENCES teacher_slots(slot_id) ON DELETE CASCADE,

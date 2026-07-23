@@ -90,9 +90,10 @@
                                                     <input type='hidden' name='status' value='approved'>
                                                     <button type='submit' class='button primary' style='min-height:32px;padding:0 12px;font-size:13px;'>Approve</button>
                                                 </form>
-                                                <form action='/teacher/bookings/<%= b.booking_id %>/status' method='POST' style='display:inline;'>
+                                                <form action='/teacher/bookings/<%= b.booking_id %>/status' method='POST' style='display:inline-flex; flex-direction:column; gap:4px; margin-top:8px;'>
                                                     <input type='hidden' name='status' value='rejected'>
-                                                    <button type='submit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;'>Reject</button>
+                                                    <input type='text' name='reject_reason' placeholder='Reason for rejection (optional)...' style='min-height:32px; padding:0 8px; font-size:13px; width: 200px;'>
+                                                    <button type='submit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px; align-self:flex-start;'>Reject</button>
                                                 </form>
                                             <% } else { %>
                                                 <small style='color:var(--muted);'>Reviewed</small>

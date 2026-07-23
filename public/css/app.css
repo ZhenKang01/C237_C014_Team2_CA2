@@ -532,6 +532,8 @@ tr:hover td { background: var(--paper); }
 }
 
 .calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
     background: var(--paper);
     padding: 12px;
     text-align: center;

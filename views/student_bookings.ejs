@@ -115,6 +115,16 @@
                                     
                                     evtEl.appendChild(title);
                                     evtEl.appendChild(time);
+                                    
+                                    if (evt.status === 'rejected' && evt.reject_reason) {
+                                        const reason = document.createElement('small');
+                                        reason.style.display = 'block';
+                                        reason.style.marginTop = '4px';
+                                        reason.style.color = '#b45309';
+                                        reason.textContent = "Reason: " + evt.reject_reason;
+                                        evtEl.appendChild(reason);
+                                    }
+                                    
                                     dayCell.appendChild(evtEl);
                                 });
                                 

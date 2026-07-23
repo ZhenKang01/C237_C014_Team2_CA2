@@ -683,7 +683,7 @@ app.get('/teacher/bookings', checkAuthenticated, checkTeacher, (req, res) => {
 });
 
 app.post('/teacher/bookings/:id/status', checkAuthenticated, checkTeacher, (req, res) => {
-    const { status } = req.body; // 'approved' or 'rejected'
+    const { status, reject_reason } = req.body; // 'approved' or 'rejected'
     if (status !== 'approved' && status !== 'rejected') return res.redirect('/teacher/bookings');
     
     // Ensure the booking belongs to this teacher's slot
@@ -694,8 +694,8 @@ app.post('/teacher/bookings/:id/status', checkAuthenticated, checkTeacher, (req,
             return res.redirect('/teacher/bookings');
         }
         
-        const sql = 'UPDATE bookings SET status = ? WHERE booking_id = ?';
-        db.query(sql, [status, req.params.id], (error) => {
+        const sql = 'UPDATE bookings SET status = ?, reject_reason = ? WHERE booking_id = ?';
+        db.query(sql, [status, reject_reason || null, req.params.id], (error) => {
             if (error) req.flash('error', 'Failed to update booking status.');
             else {
                 req.flash('success', 'Booking marked as ' + status + '.');
@@ -735,8 +735,12 @@ app.post('/student/slots/:id/book', checkAuthenticated, checkStudent, (req, res)
     
     const sql = 'INSERT INTO bookings (slot_id, student_id, class_size, description, status) VALUES (?, ?, ?, ?, "pending")';
     db.query(sql, [slotId, studentId, class_size || 1, description || null], (error) => {
-        if (error) req.flash('error', 'Failed to book slot.');
-        else req.flash('success', 'Slot booking requested! Pending teacher approval.');
+        if (error) {
+            console.error('Booking Error:', error);
+            req.flash('error', 'Failed to book slot: ' + error.message);
+        } else {
+            req.flash('success', 'Slot booking requested! Pending teacher approval.');
+        }
         res.redirect('/student/my-bookings');
     });
 });
