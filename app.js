@@ -512,7 +512,7 @@ app.post('/admin/addschedule', checkAuthenticated, checkAdmin, (req, res) => {
                 return res.redirect('/admin/addschedule');
             }
 
-            const insertSql = 'INSERT INTO teacher_slots (teacher_id, subject, location, slot_date, slot_time, end_time, capacity, is_available) VALUES (?, ?, ?, ?, ?, ?, ?, 1)';
+            const insertSql = 'INSERT INTO teacher_slots (teacher_id, subject, location, slot_date, slot_time, end_time, capacity, is_available, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, 1, "pending", "admin")';
             db.query(insertSql, [teacher_id, subject.trim(), location.trim(), slot_date, slot_time, end_time, req.body.capacity || 1], (insertError) => {
                 if (insertError) {
                     req.flash('error', 'Failed to create the session schedule.');
@@ -584,7 +584,7 @@ app.get('/teacher', checkAuthenticated, checkTeacher, (req, res) => {
     const q1 = 'SELECT COUNT(*) AS total_slots FROM teacher_slots WHERE teacher_id = ?';
     const q2 = 'SELECT COUNT(*) AS pending_bookings FROM bookings b JOIN teacher_slots ts ON b.slot_id = ts.slot_id WHERE ts.teacher_id = ? AND b.status = "pending"';
     const q3 = 'SELECT ts.subject, ts.slot_date, ts.slot_time FROM bookings b JOIN teacher_slots ts ON b.slot_id = ts.slot_id WHERE ts.teacher_id = ? AND b.status = "approved" AND ts.slot_date >= CURDATE() ORDER BY ts.slot_date ASC, ts.slot_time ASC LIMIT 1';
-    const q4 = 'SELECT b.*, ts.subject, ts.slot_date, ts.slot_time, s.full_name as student_name FROM bookings b JOIN teacher_slots ts ON b.slot_id = ts.slot_id JOIN students s ON b.student_id = s.student_id WHERE ts.teacher_id = ? AND b.status = "approved"';
+    const q4 = 'SELECT b.*, ts.subject, ts.location, ts.slot_date, ts.slot_time, s.full_name as student_name FROM bookings b JOIN teacher_slots ts ON b.slot_id = ts.slot_id JOIN students s ON b.student_id = s.student_id WHERE ts.teacher_id = ? AND b.status = "approved"';
     
     db.query(q1, [tid], (e1, r1) => {
         db.query(q2, [tid], (e2, r2) => {
@@ -596,6 +596,7 @@ app.get('/teacher', checkAuthenticated, checkTeacher, (req, res) => {
                             groupedBookingsMap[b.slot_id] = {
                                 slot_id: b.slot_id,
                                 subject: b.subject,
+                                location: b.location,
                                 slot_date: b.slot_date,
                                 slot_time: res.locals.formatTime(b.slot_time),
                                 students: []
@@ -690,6 +691,28 @@ app.post('/teacher/slots/new', checkAuthenticated, checkTeacher, (req, res) => {
     });
 });
 
+app.post('/teacher/slots/:id/accept', checkAuthenticated, checkTeacher, (req, res) => {
+    const sql = 'UPDATE teacher_slots SET status = "approved" WHERE slot_id = ? AND teacher_id = ? AND status = "pending"';
+    db.query(sql, [req.params.id, req.session.user.id], (error) => {
+        if (error) req.flash('error', 'Failed to accept slot.');
+        else req.flash('success', 'Slot accepted.');
+        res.redirect('/teacher/slots');
+    });
+});
+
+app.post('/teacher/slots/:id/reject', checkAuthenticated, checkTeacher, (req, res) => {
+    const { reject_reason } = req.body;
+    if (!reject_reason || !reject_reason.trim()) {
+        req.flash('error', 'Rejection reason is required.');
+        return res.redirect('/teacher/slots');
+    }
+    const sql = 'UPDATE teacher_slots SET status = "rejected", reject_reason = ? WHERE slot_id = ? AND teacher_id = ? AND status = "pending"';
+    db.query(sql, [reject_reason.trim(), req.params.id, req.session.user.id], (error) => {
+        if (error) req.flash('error', 'Failed to reject slot.');
+        else req.flash('success', 'Slot rejected.');
+        res.redirect('/teacher/slots');
+    });
+});
 app.post('/teacher/slots/:id/delete', checkAuthenticated, checkTeacher, (req, res) => {
     const sql = 'DELETE FROM teacher_slots WHERE slot_id = ? AND teacher_id = ?';
     db.query(sql, [req.params.id, req.session.user.id], (error) => {
@@ -803,7 +826,7 @@ app.get('/student/slots', checkAuthenticated, checkStudent, (req, res) => {
                (SELECT COALESCE(SUM(class_size), 0) FROM bookings b WHERE b.slot_id = ts.slot_id AND b.status IN ('pending', 'approved')) as booked_slots
         FROM teacher_slots ts
         JOIN teachers t ON ts.teacher_id = t.teacher_id
-        WHERE ts.is_available = 1
+        WHERE ts.is_available = 1 AND ts.status = 'approved'
         ORDER BY ts.slot_date, ts.slot_time
     `;
     db.query(sql, [req.session.user.id], (error, slots) => {

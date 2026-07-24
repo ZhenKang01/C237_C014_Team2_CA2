@@ -67,6 +67,7 @@
                             <h2 style="margin-top:0;">Booking Details</h2>
                             <div style="margin-top:16px;">
                                 <p><strong>Subject:</strong> <span id="modal-subject"></span></p>
+                                <p><strong>Location:</strong> <span id="modal-location"></span></p>
                                 <p><strong>Date:</strong> <span id="modal-date"></span></p>
                                 <p><strong>Time:</strong> <span id="modal-time"></span></p>
                                 <hr style="margin: 16px 0; border: none; border-top: 1px solid var(--border);">
@@ -146,6 +147,7 @@
                                     evtEl.style.cursor = 'pointer';
                                     evtEl.addEventListener('click', () => {
                                         document.getElementById('modal-subject').textContent = evt.subject;
+                                        document.getElementById('modal-location').textContent = evt.location || 'N/A';
                                         document.getElementById('modal-date').textContent = new Date(evt.slot_date).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' });
                                         document.getElementById('modal-time').textContent = evt.slot_time;
                                         document.getElementById('modal-student-count').textContent = evt.students.length;

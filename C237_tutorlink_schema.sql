@@ -42,6 +42,9 @@ CREATE TABLE IF NOT EXISTS teacher_slots (
     end_time TIME NOT NULL,
     is_available TINYINT(1) DEFAULT 1,
     capacity INT NOT NULL DEFAULT 1,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'approved',
+    created_by ENUM('teacher', 'admin') DEFAULT 'teacher',
+    reject_reason TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id) ON DELETE CASCADE
 );

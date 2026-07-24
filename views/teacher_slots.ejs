@@ -80,19 +80,35 @@
                                             <small><%= formatTime(slot.slot_time) %> - <%= formatTime(slot.end_time) || '--:--' %></small>
                                         </td>
                                         <td>
-                                            <% if (slot.is_available) { %>
-                                                <span style="color:var(--green);font-weight:600;">Available</span>
+                                            <% if (slot.status === 'pending') { %>
+                                                <span style="color:var(--primary);font-weight:600;">Pending Admin</span>
+                                            <% } else if (slot.status === 'rejected') { %>
+                                                <span style="color:red;font-weight:600;">Rejected</span>
+                                                <% if (slot.reject_reason) { %>
+                                                    <br><small style="color:red;"><%= slot.reject_reason %></small>
+                                                <% } %>
                                             <% } else { %>
-                                                <span style="color:var(--muted);">Unavailable</span>
+                                                <% if (slot.is_available) { %>
+                                                    <span style="color:var(--green);font-weight:600;">Available</span>
+                                                <% } else { %>
+                                                    <span style="color:var(--muted);">Unavailable</span>
+                                                <% } %>
+                                                <br>
+                                                <small><%= slot.slots_left %> / <%= slot.capacity %> slots left</small>
                                             <% } %>
-                                            <br>
-                                            <small><%= slot.slots_left %> / <%= slot.capacity %> slots left</small>
                                         </td>
                                         <td onclick="event.stopPropagation();">
-                                            <a href='/teacher/slots/<%= slot.slot_id %>/edit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;'>Edit</a>
-                                            <form action='/teacher/slots/<%= slot.slot_id %>/delete' method='POST' style='display:inline;' onsubmit='return confirm("Delete this slot?");'>
-                                                <button type='submit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;color:red;'>Delete</button>
-                                            </form>
+                                            <% if (slot.status === 'pending') { %>
+                                                <form action='/teacher/slots/<%= slot.slot_id %>/accept' method='POST' style='display:inline;'>
+                                                    <button type='submit' class='button primary' style='min-height:32px;padding:0 12px;font-size:13px;'>Accept</button>
+                                                </form>
+                                                <button type='button' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;color:red;' onclick='openRejectModal(<%= slot.slot_id %>)'>Reject</button>
+                                            <% } else { %>
+                                                <a href='/teacher/slots/<%= slot.slot_id %>/edit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;'>Edit</a>
+                                                <form action='/teacher/slots/<%= slot.slot_id %>/delete' method='POST' style='display:inline;' onsubmit='return confirm("Delete this slot?");'>
+                                                    <button type='submit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;color:red;'>Delete</button>
+                                                </form>
+                                            <% } %>
                                         </td>
                                     </tr>
                                 <% }) %>
@@ -115,6 +131,23 @@
                 <button type="button" class="button secondary" onclick="document.getElementById('students-modal').style.display = 'none';">Close</button>
             </div>
         </div>
+
+
+    <!-- Reject Modal -->
+    <div id="reject-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:white; padding:32px; border-radius:12px; max-width:400px; width:90%;">
+            <h2 style="margin-top:0; color:red;">Reject Slot</h2>
+            <form id="reject-form" method="POST" action="">
+                <div class="form-group" style="margin-top: 16px;">
+                    <label>Reason for Rejection</label>
+                    <textarea name="reject_reason" required style="width: 100%; min-height: 80px; padding: 12px; border: 1px solid var(--border); border-radius: 8px;" placeholder="Please provide a reason..."></textarea>
+                </div>
+                <div style="margin-top:24px; display:flex; justify-content:flex-end; gap: 12px;">
+                    <button type="button" class="button secondary" onclick="document.getElementById('reject-modal').style.display = 'none';">Cancel</button>
+                    <button type="submit" class="button primary" style="background:red;">Reject Slot</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -133,6 +166,13 @@
                 });
             }
             document.getElementById('students-modal').style.display = 'flex';
+        }
+
+        function openRejectModal(slotId) {
+            const modal = document.getElementById('reject-modal');
+            const form = document.getElementById('reject-form');
+            form.action = '/teacher/slots/' + slotId + '/reject';
+            modal.style.display = 'flex';
         }
     </script>
 </body>
