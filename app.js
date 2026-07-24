@@ -114,7 +114,7 @@ const tables = [
         `ALTER TABLE students ADD COLUMN onboarding_completed TINYINT(1) DEFAULT 0`,
     ];
 
-
+const upload = multer({ storage });
 
     
     /// Jenita ///
