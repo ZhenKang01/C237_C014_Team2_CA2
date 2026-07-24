@@ -67,6 +67,10 @@ const tables = [
             slot_time TIME NOT NULL,
             end_time TIME NOT NULL,
             is_available TINYINT(1) DEFAULT 1,
+            capacity INT NOT NULL DEFAULT 1,
+            status ENUM('pending', 'approved', 'rejected') DEFAULT 'approved',
+            created_by ENUM('teacher', 'admin') DEFAULT 'teacher',
+            reject_reason TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id) ON DELETE CASCADE
         )`,
@@ -97,7 +101,11 @@ const tables = [
             FOREIGN KEY (reviewed_by) REFERENCES admins(admin_id) ON DELETE SET NULL
         )`,
         `INSERT IGNORE INTO admins (email, full_name, password_hash, phone_number) VALUES ('admin@test.com', 'System Admin', SHA1('password123'), '98765432')`,
-        `INSERT IGNORE INTO teachers (email, full_name, password_hash, phone_number) VALUES ('teacher@test.com', 'Jane Teacher', SHA1('password123'), '91234567')`
+        `INSERT IGNORE INTO teachers (email, full_name, password_hash, phone_number) VALUES ('teacher@test.com', 'Jane Teacher', SHA1('password123'), '91234567')`,
+        `ALTER TABLE teacher_slots ADD COLUMN capacity INT NOT NULL DEFAULT 1`,
+        `ALTER TABLE teacher_slots ADD COLUMN status ENUM('pending', 'approved', 'rejected') DEFAULT 'approved'`,
+        `ALTER TABLE teacher_slots ADD COLUMN created_by ENUM('teacher', 'admin') DEFAULT 'teacher'`,
+        `ALTER TABLE teacher_slots ADD COLUMN reject_reason TEXT`
     ];
 
     let i = 0;
