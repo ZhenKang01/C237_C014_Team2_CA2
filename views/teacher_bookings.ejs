@@ -108,6 +108,11 @@
                                                     "<%= b.description %>"
                                                 </small>
                                             <% } %>
+                                            <% if (b.student_reason) { %>
+                                                <small style='display: block; margin-top: 4px; color: #b45309;'>
+                                                    <b>Student's reason:</b> <%= b.student_reason %>
+                                                </small>
+                                            <% } %>
                                         </td>
 
                                         <td>

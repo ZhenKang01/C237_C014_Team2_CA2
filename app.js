@@ -77,6 +77,7 @@ const tables = [
         `CREATE TABLE IF NOT EXISTS bookings (
             booking_id INT AUTO_INCREMENT PRIMARY KEY,
             slot_id INT NOT NULL,
+            student_reason TEXT,
             student_id INT NOT NULL,
             class_size INT NOT NULL,
             description TEXT,
@@ -902,12 +903,48 @@ app.get('/student/my-bookings', checkAuthenticated, checkStudent, (req, res) => 
     });
 });
 
+function combineSlotDateTime(slotDate, slotTime) {
+    const d = new Date(slotDate);
+    const parts = String(slotTime).split(':').map(Number);
+    d.setHours(parts[0] || 0, parts[1] || 0, parts[2] || 0, 0);
+    return d;
+}
+
 app.post('/student/bookings/:id/cancel', checkAuthenticated, checkStudent, (req, res) => {
-    const sql = 'UPDATE bookings SET status = "cancelled" WHERE booking_id = ? AND student_id = ?';
-    db.query(sql, [req.params.id, req.session.user.id], (error) => {
-        if (error) req.flash('error', 'Failed to cancel booking.');
-        else req.flash('success', 'Booking cancelled.');
-        res.redirect('/student/my-bookings');
+    const reason = (req.body.reason || '').trim();
+    if (!reason) {
+        req.flash('error', 'Please provide a reason for cancelling.');
+        return res.redirect('/student/my-bookings');
+    }
+
+    const checkSql = `
+        SELECT b.status, ts.slot_date, ts.slot_time
+        FROM bookings b
+        JOIN teacher_slots ts ON b.slot_id = ts.slot_id
+        WHERE b.booking_id = ? AND b.student_id = ?
+    `;
+    db.query(checkSql, [req.params.id, req.session.user.id], (checkError, results) => {
+        if (checkError || results.length === 0) {
+            req.flash('error', 'Booking not found.');
+            return res.redirect('/student/my-bookings');
+        }
+
+        const booking = results[0];
+        if (combineSlotDateTime(booking.slot_date, booking.slot_time) < new Date()) {
+            req.flash('error', 'This session has already passed and cannot be cancelled.');
+            return res.redirect('/student/my-bookings');
+        }
+        if (booking.status === 'cancelled' || booking.status === 'rejected') {
+            req.flash('error', 'This booking cannot be cancelled.');
+            return res.redirect('/student/my-bookings');
+        }
+
+        const sql = 'UPDATE bookings SET status = "cancelled", student_reason = ? WHERE booking_id = ? AND student_id = ?';
+        db.query(sql, [reason, req.params.id, req.session.user.id], (error) => {
+            if (error) req.flash('error', 'Failed to cancel booking.');
+            else req.flash('success', 'Booking cancelled.');
+            res.redirect('/student/my-bookings');
+        });
     });
 });
 
@@ -932,6 +969,91 @@ app.post('/student/bookings/:id/edit', checkAuthenticated, checkStudent, (req, r
         }
         req.flash('success', 'Booking updated successfully.');
         res.redirect('/student/my-bookings');
+    });
+});
+
+// Change booking to a different available slot — shows the picker page
+app.get('/student/bookings/:id/change', checkAuthenticated, checkStudent, (req, res) => {
+    const bookingSql = `
+        SELECT b.*, ts.slot_date, ts.slot_time, ts.subject
+        FROM bookings b
+        JOIN teacher_slots ts ON b.slot_id = ts.slot_id
+        WHERE b.booking_id = ? AND b.student_id = ?
+    `;
+    db.query(bookingSql, [req.params.id, req.session.user.id], (error, results) => {
+        if (error || results.length === 0) {
+            req.flash('error', 'Booking not found.');
+            return res.redirect('/student/my-bookings');
+        }
+
+        const booking = results[0];
+        if (combineSlotDateTime(booking.slot_date, booking.slot_time) < new Date()) {
+            req.flash('error', 'This session has already passed and cannot be changed.');
+            return res.redirect('/student/my-bookings');
+        }
+        if (booking.status === 'cancelled' || booking.status === 'rejected') {
+            req.flash('error', 'This booking cannot be changed.');
+            return res.redirect('/student/my-bookings');
+        }
+
+        const slotsSql = `
+            SELECT ts.*, t.full_name as teacher_name
+            FROM teacher_slots ts
+            JOIN teachers t ON ts.teacher_id = t.teacher_id
+            WHERE ts.is_available = 1 AND ts.slot_id != ? AND ts.slot_date >= CURDATE()
+            ORDER BY ts.slot_date, ts.slot_time
+        `;
+        db.query(slotsSql, [booking.slot_id], (slotsError, slots) => {
+            res.render('student_booking_change', { booking, slots: slots || [] });
+        });
+    });
+});
+
+// Change booking to a different available slot — performs the update
+app.post('/student/bookings/:id/change', checkAuthenticated, checkStudent, (req, res) => {
+    const newSlotId = req.body.new_slot_id;
+    const reason = (req.body.reason || '').trim();
+
+    if (!newSlotId || !reason) {
+        req.flash('error', 'Please select a new slot and provide a reason.');
+        return res.redirect(`/student/bookings/${req.params.id}/change`);
+    }
+
+    const bookingSql = `
+        SELECT b.*, ts.slot_date, ts.slot_time
+        FROM bookings b
+        JOIN teacher_slots ts ON b.slot_id = ts.slot_id
+        WHERE b.booking_id = ? AND b.student_id = ?
+    `;
+    db.query(bookingSql, [req.params.id, req.session.user.id], (error, results) => {
+        if (error || results.length === 0) {
+            req.flash('error', 'Booking not found.');
+            return res.redirect('/student/my-bookings');
+        }
+
+        const booking = results[0];
+        if (combineSlotDateTime(booking.slot_date, booking.slot_time) < new Date()) {
+            req.flash('error', 'This session has already passed and cannot be changed.');
+            return res.redirect('/student/my-bookings');
+        }
+        if (booking.status === 'cancelled' || booking.status === 'rejected') {
+            req.flash('error', 'This booking cannot be changed.');
+            return res.redirect('/student/my-bookings');
+        }
+
+        const updateSql = `
+            UPDATE bookings
+            SET slot_id = ?, status = "pending", reject_reason = NULL, student_reason = ?
+            WHERE booking_id = ? AND student_id = ?
+        `;
+        db.query(updateSql, [newSlotId, reason, req.params.id, req.session.user.id], (updateError) => {
+            if (updateError) {
+                req.flash('error', 'Failed to change booking.');
+                return res.redirect(`/student/bookings/${req.params.id}/change`);
+            }
+            req.flash('success', 'Booking changed and sent for approval again.');
+            res.redirect('/student/my-bookings');
+        });
     });
 });
 

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Change Booking - TutorLink</title><link rel='stylesheet' href='/css/app.css'></head>
+<body class='dashboard-page'>
+    <nav class='nav shell'><a class='brand' href='/'><span class='brand-mark'>T</span>TutorLink</a><div class='user-nav'><b class='role-pill student-pill'>Student</b><span><strong><%= user.full_name %></strong><small><%= user.email %></small></span><a class='button secondary' href='/dashboard'>Dashboard</a><a class='button secondary' href='/profile'>Profile</a><a class='button secondary' href='/logout'>Log out</a></div></nav>
+    <main class='dashboard shell with-sidebar'>
+        <aside class='sidebar'>
+            <nav class='sidebar-nav'>
+                <a href='/dashboard' class='sidebar-link'>
+                    <span class='icon'>🏠</span>
+                    Dashboard
+                </a>
+                <a href='/student/slots' class='sidebar-link'>
+                    <span class='icon'>🔍</span>
+                    Find Tutors
+                </a>
+                <a href='/student/my-bookings' class='sidebar-link active'>
+                    <span class='icon'>📅</span>
+                    My Bookings
+                </a>
+            </nav>
+        </aside>
+        <div class='dashboard-content'>
+            <% if (errorMessages && errorMessages.length) { %><div class='alert error'><%= errorMessages.join(' ') %></div><% } %>
+            <% if (successMessages && successMessages.length) { %><div class='alert success'><%= successMessages.join(' ') %></div><% } %>
+
+            <header class='dashboard-header'>
+                <div>
+                    <span class='eyebrow'>My Bookings</span>
+                    <h1>Change Booking</h1>
+                    <p>Currently booked: <b><%= booking.subject %></b> &mdash;
+                        <%= new Date(booking.slot_date).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                        <%= booking.slot_time %>
+                    </p>
+                </div>
+            </header>
+
+            <section class='panel'>
+                <header>
+                    <h2>Pick a New Slot</h2>
+                    <p>Choose a different available session and tell us why you're changing.</p>
+                </header>
+
+                <div style='padding: 32px;'>
+                    <% if (!slots || !slots.length) { %>
+                        <div class='empty'>No other available slots right now. <a href='/student/my-bookings'>Go back</a>.</div>
+                    <% } else { %>
+                        <form action='/student/bookings/<%= booking.booking_id %>/change' method='POST' class='form-stack'>
+                            <label>
+                                New Slot
+                                <select name='new_slot_id' required>
+                                    <option value='' disabled selected>Select a slot</option>
+                                    <% slots.forEach(s => { %>
+                                        <option value='<%= s.slot_id %>'>
+                                            <%= s.teacher_name %> &mdash; <%= s.subject %> &mdash;
+                                            <%= new Date(s.slot_date).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+                                            <%= s.slot_time %> - <%= s.end_time %>
+                                        </option>
+                                    <% }) %>
+                                </select>
+                            </label>
+
+                            <label>
+                                Reason for Changing
+                                <textarea name='reason' rows='3' placeholder='Let us know why you want to change this booking...' required></textarea>
+                            </label>
+
+                            <div style='display:flex; gap:12px;'>
+                                <button type='submit' class='button primary'>Submit Change</button>
+                                <a href='/student/my-bookings' class='button secondary'>Cancel</a>
+                            </div>
+                        </form>
+                    <% } %>
+                </div>
+            </section>
+        </div>
+    </main>
+</body>
+</html>

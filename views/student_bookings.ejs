@@ -49,11 +49,87 @@
                             <!-- Calendar days injected via JS -->
                         </div>
                     </div>
+                    <div id="booking-modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.5); z-index:100; align-items:center; justify-content:center;">
+                        <div id="booking-modal" style="background:var(--white); border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); padding:32px; width:min(420px, 90vw); max-height:85vh; overflow-y:auto;">
+                            <div id="booking-modal-body"></div>
+                        </div>
+                    </div>
                     
                     <script>
                         // Inject bookings from EJS to JS safely
-                        const bookings = <%- JSON.stringify((bookings || []).map(b => Object.assign({}, b, { slot_time: formatTime(b.slot_time) }))) %>;
-                        
+                        const bookings = <%- JSON.stringify((bookings || []).map(b => Object.assign({}, b, { slot_time: formatTime(b.slot_time), raw_slot_time: b.slot_time, end_time: formatTime(b.end_time) }))) %>;
+                        const modalOverlay = document.getElementById('booking-modal-overlay');
+                        const modalBody = document.getElementById('booking-modal-body');
+
+                        function closeBookingModal() {
+                            modalOverlay.style.display = 'none';
+                            modalBody.innerHTML = '';
+                        }
+
+                        modalOverlay.addEventListener('click', (e) => {
+                            if (e.target === modalOverlay) closeBookingModal();
+                        });
+
+                        function combineDateTime(dateStr, timeStr) {
+                            const d = new Date(dateStr);
+                            const parts = String(timeStr).split(':').map(Number);
+                            d.setHours(parts[0] || 0, parts[1] || 0, parts[2] || 0, 0);
+                            return d;
+                        }
+
+                        function openBookingModal(evt) {
+                            const dateLabel = new Date(evt.slot_date).toLocaleDateString('en-SG', { day: 'numeric', month: 'short', year: 'numeric' });
+                            const isPast = combineDateTime(evt.slot_date, evt.raw_slot_time) < new Date();
+                            const isFinal = evt.status === 'cancelled' || evt.status === 'rejected';
+
+                            let html = `
+                                <h2 style="margin-bottom:4px;">${evt.subject}</h2>
+                                <p style="color:var(--muted); margin:0 0 16px;">${dateLabel} &middot; ${evt.slot_time} - ${evt.end_time}</p>
+                                <p style="margin:0 0 16px;"><b>Status:</b> <span class="capitalize">${evt.status}</span></p>
+                            `;
+
+                            if (evt.status === 'rejected' && evt.reject_reason) {
+                                html += `<p style="margin:0 0 16px; color:#b45309;"><b>Teacher's reason:</b> ${evt.reject_reason}</p>`;
+                            }
+                            if (evt.status === 'cancelled' && evt.student_reason) {
+                                html += `<p style="margin:0 0 16px; color:var(--muted);"><b>Your reason:</b> ${evt.student_reason}</p>`;
+                            }
+
+                            if (isPast) {
+                                html += `<p style="color:var(--muted); font-style:italic;">This session has already passed and can no longer be changed or cancelled.</p>`;
+                                html += `<button type="button" class="button secondary full" onclick="closeBookingModal()">Close</button>`;
+                            } else if (isFinal) {
+                                html += `<button type="button" class="button secondary full" onclick="closeBookingModal()">Close</button>`;
+                            } else {
+                                html += `
+                                    <div style="display:flex; flex-direction:column; gap:12px;">
+                                        <a href="/student/bookings/${evt.booking_id}/change" class="button primary full">Change Booking</a>
+                                        <button type="button" class="button secondary full" id="show-cancel-form">Cancel Booking</button>
+                                        <div id="cancel-reason-block" style="display:none; margin-top:8px;">
+                                            <form action="/student/bookings/${evt.booking_id}/cancel" method="POST" class="form-stack" style="gap:12px; margin-top:0;">
+                                                <label>
+                                                    Reason for Cancelling
+                                                    <textarea name="reason" rows="3" placeholder="Let us know why you're cancelling..." required></textarea>
+                                                </label>
+                                                <button type="submit" class="button primary full">Confirm Cancellation</button>
+                                            </form>
+                                        </div>
+                                        <button type="button" class="button secondary full" onclick="closeBookingModal()">Close</button>
+                                    </div>
+                                `;
+                            }
+
+                            modalBody.innerHTML = html;
+                            modalOverlay.style.display = 'flex';
+
+                            const showCancelBtn = document.getElementById('show-cancel-form');
+                            if (showCancelBtn) {
+                                showCancelBtn.addEventListener('click', () => {
+                                    document.getElementById('cancel-reason-block').style.display = 'block';
+                                    showCancelBtn.style.display = 'none';
+                                });
+                            }
+                        }
                         let currentDate = new Date();
                         
                         const calendarGrid = document.getElementById('calendar-grid');
@@ -104,6 +180,8 @@
                                 dayEvents.forEach(evt => {
                                     const evtEl = document.createElement('div');
                                     evtEl.className = `calendar-event status-${evt.status}`;
+                                    evtEl.style.cursor = 'pointer';
+                                    evtEl.addEventListener('click', () => openBookingModal(evt));
                                     
                                     const title = document.createElement('span');
                                     title.className = 'event-title';
