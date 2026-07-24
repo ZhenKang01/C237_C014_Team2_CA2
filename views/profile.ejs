@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang='en'>
 <head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>My Profile - TutorLink</title><link rel='stylesheet' href='/css/app.css'></head>
 <body class='dashboard-page'>
@@ -28,39 +28,8 @@
                 <h2>Edit Profile</h2>
                 <p>Update your personal details and contact information.</p>
             </header>
-            <form action='/profile' method='POST' enctype='multipart/form-data' class='form-stack' style='padding: 24px;'>
-                <div style="text-align:center; margin-bottom:24px;">
-
-    <% if (user.profile_image) { %>
-
-        <img
-            <img
-    src="<%= user.profile_image %>"
-    alt="Profile Picture"
-    class="profile-preview">
-
-    <% } else { %>
-
-        <div class="profile-placeholder">
-            <%= user.full_name.charAt(0).toUpperCase() %>
-        </div>
-
-    <% } %>
-
-    <label style="display:block; margin-top:16px;">
-        Profile Picture
-        <input
-            type="file"
-            name="profile_image"
-            accept=".jpg,.jpeg,.png,image/*">
-    </label>
-
-    <small style="color:var(--muted);">
-        JPG or PNG only. Maximum size: 2 MB.
-    </small>
-
-</div>
-
+            
+            <form action='/profile' method='POST' class='form-stack' style='padding: 24px;'>
                 <div class='form-row'>
                     <label>Full name
                         <input type='text' name='full_name' value='<%= formData.full_name || "" %>' required>

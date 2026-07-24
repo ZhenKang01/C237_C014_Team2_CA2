@@ -5,7 +5,7 @@ const mysql = require('mysql2');
 const session = require('express-session'); 
 const MySQLStore = require('express-mysql-session')(session);
 const flash = require('connect-flash');
-const multer = require('multer');
+//const multer = require('multer');
 const path = require('path');
 const {
     checkAuthenticated,
@@ -112,27 +112,7 @@ const tables = [
         `ALTER TABLE teacher_slots ADD COLUMN created_by ENUM('teacher', 'admin') DEFAULT 'teacher'`,
         `ALTER TABLE teacher_slots ADD COLUMN reject_reason TEXT`,
         `ALTER TABLE students ADD COLUMN onboarding_completed TINYINT(1) DEFAULT 0`,
-        `ALTER TABLE students ADD COLUMN profile_image VARCHAR(255) DEFAULT NULL`,
-    `ALTER TABLE teachers ADD COLUMN profile_image VARCHAR(255) DEFAULT NULL`,
     ];
-
-
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("cloudinary").v2;
-
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
-const storage = new CloudinaryStorage({
-    cloudinary,
-    params: {
-        folder: "TutorLink_ProfilePictures",
-        allowed_formats: ["jpg", "jpeg", "png"]
-    }
-});
 
 
 
@@ -370,17 +350,17 @@ app.get('/profile', checkAuthenticated, (req, res) => {
     res.render('profile', { formData: req.flash('formData')[0] || req.session.user });
 });
 
-app.post('/profile', checkAuthenticated, upload.single('profile_image'), (req, res) => {
+app.post('/profile', checkAuthenticated, (req, res) => {
     const full_name = (req.body.full_name || '').trim();
     const email = (req.body.email || '').trim().toLowerCase();
     const phone_number = (req.body.phone_number || '').trim();
     const password = req.body.password || '';
 
-    let profile_image = req.session.user.profile_image;
+    
 
-if (req.file) {
-    profile_image = req.file.path; // Cloudinary URL
-}
+//if (req.file) {
+    //profile_image = req.file.path; // Cloudinary URL
+
 
     if (!full_name || !email || !phone_number) {
         req.flash('error', 'Name, email, and phone number are required.');
@@ -406,7 +386,6 @@ if (password) {
         SET full_name = ?,
             email = ?,
             phone_number = ?,
-            profile_image = ?,
             password_hash = SHA1(?)
         WHERE ${idField} = ?
     `;
@@ -415,7 +394,6 @@ if (password) {
         full_name,
         email,
         phone_number,
-        profile_image,
         password,
         id
     ];
@@ -426,8 +404,7 @@ if (password) {
         UPDATE ${table}
         SET full_name = ?,
             email = ?,
-            phone_number = ?,
-            profile_image = ?
+            phone_number = ?
         WHERE ${idField} = ?
     `;
 
@@ -435,7 +412,6 @@ if (password) {
         full_name,
         email,
         phone_number,
-        profile_image,
         id
     ];
 }
@@ -454,7 +430,6 @@ if (password) {
         req.session.user.full_name = full_name;
         req.session.user.email = email;
         req.session.user.phone_number = phone_number;
-        req.session.user.profile_image = profile_image;
         req.flash('success', 'Profile updated successfully.');
         return req.session.save(() => res.redirect('/profile'));
     });
