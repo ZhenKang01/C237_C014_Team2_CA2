@@ -742,7 +742,7 @@ app.post('/admin/schedules/:id/delete', checkAuthenticated, checkAdmin, (req, re
 
 // --- TEACHER SLOTS ROUTES ---
 /// Hein - Teacher Slots Management ///
-
+/// Hein - Teaacher slots search and filter by subject and location ///
 app.get('/teacher/slots', checkAuthenticated, checkTeacher, (req, res) => {
     const subject = req.query.subject || '';
     const location = req.query.location || '';
@@ -775,6 +775,7 @@ app.get('/teacher/slots', checkAuthenticated, checkTeacher, (req, res) => {
         });
     });
 });
+/// Hein - Teacher Add New Slot ///
 app.get('/teacher/slots/new', checkAuthenticated, checkTeacher, (req, res) => {
     res.render('teacher_slot_form', { slot: {} });
 });
@@ -836,7 +837,7 @@ app.post('/teacher/slots/:id/delete', checkAuthenticated, checkTeacher, (req, re
     });
 });
 
-/// hein - Teacher Edit Slot (with past date check) ///
+/// Hein - Teacher Edit Slot (with past date check) ///
 
 app.get('/teacher/slots/:id/edit', checkAuthenticated, checkTeacher, (req, res) => {
     const sql = 'SELECT * FROM teacher_slots WHERE slot_id = ? AND teacher_id = ?';
@@ -880,7 +881,7 @@ app.post('/teacher/slots/:id/edit', checkAuthenticated, checkTeacher, (req, res)
 });
 
 
-
+/// Hein - Teacher View Bookings (with search and filter) ///
 app.get('/teacher/bookings', checkAuthenticated, checkTeacher, (req, res) => {
 
     const student = req.query.student || '';
@@ -927,7 +928,6 @@ app.get('/teacher/bookings', checkAuthenticated, checkTeacher, (req, res) => {
 
 
 
-/// hein - Teacher Approve/Reject Booking (with ownership check) ///
 app.post('/teacher/bookings/:id/status', checkAuthenticated, checkTeacher, (req, res) => {
     const { status, reject_reason } = req.body; // 'approved' or 'rejected'
     if (status !== 'approved' && status !== 'rejected') return res.redirect('/teacher/bookings');
