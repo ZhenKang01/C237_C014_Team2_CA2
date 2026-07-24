@@ -26,7 +26,7 @@
                     <input type='text' name='location' placeholder='e.g. Online, Library Room A' required>
                 </label>
                 <label>Date
-                    <input type='date' name='slot_date' required>
+                    <input type='date' name='slot_date' min='<%= new Date().toISOString().split("T")[0] %>' required>
                 </label>
                 <div class='form-row'>
                     <label>Start Time

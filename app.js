@@ -176,6 +176,14 @@ function checkTeacherAvailability(teacherId, slotDate, slotTime, callback) {
 
         return callback(null, results.length === 0);
     });
+
+    function isPastDate(dateInput) {
+        const d = new Date(dateInput);
+        const today = new Date();
+        d.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        return d < today;
+    }
 }
 
 ///////// Jenita - Login and Registration Validation //////////
@@ -552,6 +560,11 @@ app.get('/admin/addschedule', checkAuthenticated, checkAdmin, (req, res) => {
             return res.redirect('/admin');
         }
 
+        if (isPastDate(slot_date)) {
+            req.flash('error', 'Cannot create a schedule for a past date.');
+            return res.redirect('/admin/addschedule');
+        }
+
         return res.render('admin_schedule', { teachers });
     });
 });
@@ -731,12 +744,25 @@ app.post('/teacher/slots/:id/reject', checkAuthenticated, checkTeacher, (req, re
         res.redirect('/teacher/slots');
     });
 });
+
 app.post('/teacher/slots/:id/delete', checkAuthenticated, checkTeacher, (req, res) => {
-    const sql = 'DELETE FROM teacher_slots WHERE slot_id = ? AND teacher_id = ?';
-    db.query(sql, [req.params.id, req.session.user.id], (error) => {
-        if (error) req.flash('error', 'Failed to delete slot.');
-        else req.flash('success', 'Slot deleted.');
-        res.redirect('/teacher/slots');
+    const checkSql = 'SELECT slot_date FROM teacher_slots WHERE slot_id = ? AND teacher_id = ?';
+    db.query(checkSql, [req.params.id, req.session.user.id], (checkError, results) => {
+        if (checkError || results.length === 0) {
+            req.flash('error', 'Slot not found.');
+            return res.redirect('/teacher/slots');
+        }
+        if (isPastDate(results[0].slot_date)) {
+            req.flash('error', 'Past schedules are inactive and cannot be deleted.');
+            return res.redirect('/teacher/slots');
+        }
+
+        const sql = 'DELETE FROM teacher_slots WHERE slot_id = ? AND teacher_id = ?';
+        db.query(sql, [req.params.id, req.session.user.id], (error) => {
+            if (error) req.flash('error', 'Failed to delete slot.');
+            else req.flash('success', 'Slot deleted.');
+            res.redirect('/teacher/slots');
+        });
     });
 });
 
@@ -747,20 +773,37 @@ app.get('/teacher/slots/:id/edit', checkAuthenticated, checkTeacher, (req, res) 
             req.flash('error', 'Slot not found.');
             return res.redirect('/teacher/slots');
         }
+        if (isPastDate(results[0].slot_date)) {
+            req.flash('error', 'Past schedules are inactive and cannot be edited.');
+            return res.redirect('/teacher/slots');
+        }
         res.render('teacher_slot_edit', { slot: results[0] });
     });
 });
 
 app.post('/teacher/slots/:id/edit', checkAuthenticated, checkTeacher, (req, res) => {
     const { subject, location, slot_date, slot_time, end_time } = req.body;
-    const sql = 'UPDATE teacher_slots SET subject = ?, location = ?, slot_date = ?, slot_time = ?, end_time = ? WHERE slot_id = ? AND teacher_id = ?';
-    db.query(sql, [subject, location, slot_date, slot_time, end_time, req.params.id, req.session.user.id], (error) => {
-        if (error) {
-            req.flash('error', 'Failed to update slot.');
-            return res.redirect(`/teacher/slots/${req.params.id}/edit`);
+
+    const checkSql = 'SELECT slot_date FROM teacher_slots WHERE slot_id = ? AND teacher_id = ?';
+    db.query(checkSql, [req.params.id, req.session.user.id], (checkError, results) => {
+        if (checkError || results.length === 0) {
+            req.flash('error', 'Slot not found.');
+            return res.redirect('/teacher/slots');
         }
-        req.flash('success', 'Slot updated successfully.');
-        res.redirect('/teacher/slots');
+        if (isPastDate(results[0].slot_date)) {
+            req.flash('error', 'Past schedules are inactive and cannot be edited.');
+            return res.redirect('/teacher/slots');
+        }
+
+        const sql = 'UPDATE teacher_slots SET subject = ?, location = ?, slot_date = ?, slot_time = ?, end_time = ? WHERE slot_id = ? AND teacher_id = ?';
+        db.query(sql, [subject, location, slot_date, slot_time, end_time, req.params.id, req.session.user.id], (error) => {
+            if (error) {
+                req.flash('error', 'Failed to update slot.');
+                return res.redirect(`/teacher/slots/${req.params.id}/edit`);
+            }
+            req.flash('success', 'Slot updated successfully.');
+            res.redirect('/teacher/slots');
+        });
     });
 });
 
@@ -844,8 +887,8 @@ app.get('/student/slots', checkAuthenticated, checkStudent, (req, res) => {
                (SELECT COALESCE(SUM(class_size), 0) FROM bookings b WHERE b.slot_id = ts.slot_id AND b.status IN ('pending', 'approved')) as booked_slots
         FROM teacher_slots ts
         JOIN teachers t ON ts.teacher_id = t.teacher_id
-        WHERE ts.is_available = 1 AND ts.status = 'approved'
-        ORDER BY ts.slot_date, ts.slot_time
+        WHERE ts.is_available = 1 AND ts.status = 'approved' AND ts.slot_date >= CURDATE()
+        ORDER BY ts.created_at DESC
     `;
     db.query(sql, [req.session.user.id], (error, slots) => {
         if (error) {
@@ -861,9 +904,14 @@ app.post('/student/slots/:id/book', checkAuthenticated, checkStudent, (req, res)
     const slotId = req.params.id;
     const studentId = req.session.user.id;
     
-    db.query('SELECT capacity, (SELECT COALESCE(SUM(class_size), 0) FROM bookings b WHERE b.slot_id = ts.slot_id AND b.status IN ("pending", "approved")) as booked_slots FROM teacher_slots ts WHERE slot_id = ?', [slotId], (err, results) => {
+    db.query('SELECT capacity, slot_date, (SELECT COALESCE(SUM(class_size), 0) FROM bookings b WHERE b.slot_id = ts.slot_id AND b.status IN ("pending", "approved")) as booked_slots FROM teacher_slots ts WHERE slot_id = ?', [slotId], (err, results) => {
         if (err || results.length === 0) {
             req.flash('error', 'Failed to retrieve slot information.');
+            return res.redirect('/student/slots');
+        }
+
+        if (isPastDate(results[0].slot_date)) {
+            req.flash('error', 'This slot has already passed and can no longer be booked.');
             return res.redirect('/student/slots');
         }
         

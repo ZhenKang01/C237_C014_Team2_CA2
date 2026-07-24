@@ -103,6 +103,8 @@
                                                     <button type='submit' class='button primary' style='min-height:32px;padding:0 12px;font-size:13px;'>Accept</button>
                                                 </form>
                                                 <button type='button' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;color:red;' onclick='openRejectModal(<%= slot.slot_id %>)'>Reject</button>
+                                            <% } else if (new Date(slot.slot_date) < new Date(new Date().toDateString())) { %>
+                                                <span style='color:var(--muted);font-style:italic;'>Inactive</span>
                                             <% } else { %>
                                                 <a href='/teacher/slots/<%= slot.slot_id %>/edit' class='button secondary' style='min-height:32px;padding:0 12px;font-size:13px;'>Edit</a>
                                                 <form action='/teacher/slots/<%= slot.slot_id %>/delete' method='POST' style='display:inline;' onsubmit='return confirm("Delete this slot?");'>
