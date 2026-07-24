@@ -318,7 +318,7 @@ req.flash('success', 'Welcome back, ' + safeUser.full_name + '.');
 
 if (
     current.role === 'student' &&
-    safeUser.onboarding_completed 
+    !safeUser.onboarding_completed 
 ) {
     return req.session.save(() => res.redirect('/student/share'));
 }
@@ -518,11 +518,14 @@ app.get('/tutorial/finish', checkAuthenticated, checkStudent, (req, res) => {
 
             if (err) {
                 console.error(err);
+                return res.status(500).send("Database update failed");
             }
 
             req.session.user.onboarding_completed = 1;
 
-            res.redirect('/student');
+            req.session.save(() => {
+                res.redirect('/student');
+            });
         }
     );
 
@@ -661,11 +664,7 @@ app.get('/admin/addschedule', checkAuthenticated, checkAdmin, (req, res) => {
             req.flash('error', 'Could not load teachers for schedule creation.');
             return res.redirect('/admin');
         }
-
-        //if (isPastDate(slot_date)) {
-           // req.flash('error', 'Cannot create a schedule for a past date.');
-            //return res.redirect('/admin/addschedule');
-        //}
+        
 
         return res.render('admin_schedule', { teachers });
     });
