@@ -5,7 +5,6 @@ const mysql = require('mysql2');
 const session = require('express-session'); 
 const MySQLStore = require('express-mysql-session')(session);
 const flash = require('connect-flash');
-//const multer = require('multer');
 const path = require('path');
 const {
     checkAuthenticated,
@@ -114,7 +113,7 @@ const tables = [
         `ALTER TABLE students ADD COLUMN onboarding_completed TINYINT(1) DEFAULT 0`,
     ];
 
-const upload = multer({ storage });
+
 
     
     /// Jenita ///
@@ -319,7 +318,7 @@ req.flash('success', 'Welcome back, ' + safeUser.full_name + '.');
 
 if (
     current.role === 'student' &&
-    safeUser.onboarding_completed == 0
+    safeUser.onboarding_completed 
 ) {
     return req.session.save(() => res.redirect('/student/share'));
 }
