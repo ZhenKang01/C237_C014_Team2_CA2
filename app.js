@@ -116,27 +116,21 @@ const tables = [
     `ALTER TABLE teachers ADD COLUMN profile_image VARCHAR(255) DEFAULT NULL`,
     ];
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'public/uploads/');
-    },
-    filename: function (req, file, cb) {
-        const uniqueName = Date.now() + '-' + file.originalname;
-        cb(null, uniqueName);
-    }
+
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("cloudinary").v2;
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const upload = multer({
-    storage,
-    limits: {
-        fileSize: 2 * 1024 * 1024 // 2MB
-    },
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Only image files are allowed.'));
-        }
+const storage = new CloudinaryStorage({
+    cloudinary,
+    params: {
+        folder: "TutorLink_ProfilePictures",
+        allowed_formats: ["jpg", "jpeg", "png"]
     }
 });
 
@@ -385,7 +379,7 @@ app.post('/profile', checkAuthenticated, upload.single('profile_image'), (req, r
     let profile_image = req.session.user.profile_image;
 
 if (req.file) {
-    profile_image = req.file.filename;
+    profile_image = req.file.path; // Cloudinary URL
 }
 
     if (!full_name || !email || !phone_number) {

@@ -34,9 +34,10 @@
     <% if (user.profile_image) { %>
 
         <img
-            src="/uploads/<%= user.profile_image %>"
-            alt="Profile Picture"
-            class="profile-preview">
+            <img
+    src="<%= user.profile_image %>"
+    alt="Profile Picture"
+    class="profile-preview">
 
     <% } else { %>
 
