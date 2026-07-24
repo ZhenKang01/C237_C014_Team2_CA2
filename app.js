@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);   
 const flash = require('connect-flash');
 const path = require('path');
 const {
@@ -31,6 +32,7 @@ const db = mysql.createPool({
     ssl: process.env.DB_SSL === 'false' ? undefined : { rejectUnauthorized: false }
 });
 
+const sessionStore = new MySQLStore({}, db.promise());
 console.log('Database pool initialized for:', process.env.DB_NAME);
 
 const tables = [
@@ -125,6 +127,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('trust proxy', 1);
 app.use(session({
+    store: sessionStore,
     secret: process.env.SESSION_SECRET || 'development-only-secret',
     resave: false,
     saveUninitialized: false,
