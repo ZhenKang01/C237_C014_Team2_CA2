@@ -613,3 +613,28 @@ tr:hover td { background: var(--paper); }
 .event-time { color: var(--muted); display: block; }
 
 .capitalize { text-transform: capitalize; }
+
+
+.profile-preview{
+    width:140px;
+    height:140px;
+    border-radius:50%;
+    object-fit:cover;
+    border:4px solid var(--border);
+    display:block;
+    margin:auto;
+}
+
+.profile-placeholder{
+    width:140px;
+    height:140px;
+    border-radius:50%;
+    background:#4f46e5;
+    color:white;
+    font-size:52px;
+    font-weight:bold;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    margin:auto;
+}

@@ -5,6 +5,7 @@ const mysql = require('mysql2');
 const session = require('express-session'); 
 const MySQLStore = require('express-mysql-session')(session);
 const flash = require('connect-flash');
+const multer = require('multer');
 const path = require('path');
 const {
     checkAuthenticated,
@@ -111,9 +112,37 @@ const tables = [
         `ALTER TABLE teacher_slots ADD COLUMN created_by ENUM('teacher', 'admin') DEFAULT 'teacher'`,
         `ALTER TABLE teacher_slots ADD COLUMN reject_reason TEXT`,
         `ALTER TABLE students ADD COLUMN onboarding_completed TINYINT(1) DEFAULT 0`,
+        `ALTER TABLE students ADD COLUMN profile_image VARCHAR(255) DEFAULT NULL`,
+    `ALTER TABLE teachers ADD COLUMN profile_image VARCHAR(255) DEFAULT NULL`,
     ];
 
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads/');
+    },
+    filename: function (req, file, cb) {
+        const uniqueName = Date.now() + '-' + file.originalname;
+        cb(null, uniqueName);
+    }
+});
 
+const upload = multer({
+    storage,
+    limits: {
+        fileSize: 2 * 1024 * 1024 // 2MB
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed.'));
+        }
+    }
+});
+
+
+
+    
     /// Jenita ///
     let i = 0;
     function nextTable() {
@@ -347,11 +376,17 @@ app.get('/profile', checkAuthenticated, (req, res) => {
     res.render('profile', { formData: req.flash('formData')[0] || req.session.user });
 });
 
-app.post('/profile', checkAuthenticated, (req, res) => {
+app.post('/profile', checkAuthenticated, upload.single('profile_image'), (req, res) => {
     const full_name = (req.body.full_name || '').trim();
     const email = (req.body.email || '').trim().toLowerCase();
     const phone_number = (req.body.phone_number || '').trim();
     const password = req.body.password || '';
+
+    let profile_image = req.session.user.profile_image;
+
+if (req.file) {
+    profile_image = req.file.filename;
+}
 
     if (!full_name || !email || !phone_number) {
         req.flash('error', 'Name, email, and phone number are required.');
@@ -364,18 +399,52 @@ app.post('/profile', checkAuthenticated, (req, res) => {
     const idField = role + '_id';
 
     let sql, params;
-    if (password) {
-        if (password.length < 6) {
-            req.flash('error', 'Password must contain at least 6 characters.');
-            req.flash('formData', req.body);
-            return req.session.save(() => res.redirect('/profile'));
-        }
-        sql = `UPDATE ${table} SET full_name = ?, email = ?, phone_number = ?, password_hash = SHA1(?) WHERE ${idField} = ?`;
-        params = [full_name, email, phone_number, password, id];
-    } else {
-        sql = `UPDATE ${table} SET full_name = ?, email = ?, phone_number = ? WHERE ${idField} = ?`;
-        params = [full_name, email, phone_number, id];
+
+if (password) {
+    if (password.length < 6) {
+        req.flash('error', 'Password must contain at least 6 characters.');
+        req.flash('formData', req.body);
+        return req.session.save(() => res.redirect('/profile'));
     }
+
+    sql = `
+        UPDATE ${table}
+        SET full_name = ?,
+            email = ?,
+            phone_number = ?,
+            profile_image = ?,
+            password_hash = SHA1(?)
+        WHERE ${idField} = ?
+    `;
+
+    params = [
+        full_name,
+        email,
+        phone_number,
+        profile_image,
+        password,
+        id
+    ];
+
+} else {
+
+    sql = `
+        UPDATE ${table}
+        SET full_name = ?,
+            email = ?,
+            phone_number = ?,
+            profile_image = ?
+        WHERE ${idField} = ?
+    `;
+
+    params = [
+        full_name,
+        email,
+        phone_number,
+        profile_image,
+        id
+    ];
+}
 
     db.query(sql, params, (error) => {
         if (error) {
@@ -391,6 +460,7 @@ app.post('/profile', checkAuthenticated, (req, res) => {
         req.session.user.full_name = full_name;
         req.session.user.email = email;
         req.session.user.phone_number = phone_number;
+        req.session.user.profile_image = profile_image;
         req.flash('success', 'Profile updated successfully.');
         return req.session.save(() => res.redirect('/profile'));
     });
