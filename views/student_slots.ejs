@@ -31,7 +31,28 @@
                     <p>Browse available teaching slots and book them.</p>
                 </div>
             </header>
-
+            <section class='panel' style='margin-bottom: 24px;'>
+                <form action='/student/slots' method='GET' class='form'>
+                    <div class='form-group'>
+                        <label>Search Teacher</label>
+                        <input type='text' name='teacher' class='input' placeholder='Enter teacher name' value='<%= teacherName %>'>
+                    </div>
+                    <div class='form-group'>
+                        <label>Search Subject</label>
+                        <input type='text' name='subject' class='input' placeholder='Enter subject' value='<%= subject %>'>
+                    </div>
+                    <div class='form-group'>
+                        <label>Filter Location</label>
+                        <input type='text' name='location' class='input' placeholder='Enter location' value='<%= location %>'>
+                    </div>
+                    <div style='margin-top: 16px;'>
+                        <button type='submit' class='button primary'>Search</button>
+                        <a href='/student/slots' class='button secondary' style='margin-left: 8px;'>
+                            Clear
+                        </a>
+                    </div>
+                </form>
+            </section>
             <section class='panel'>
                 <% if (!slots || !slots.length) { %>
                     <div class='empty'>No slots are available right now. Please check back later!</div>

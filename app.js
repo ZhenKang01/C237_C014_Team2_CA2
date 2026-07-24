@@ -960,6 +960,10 @@ app.post('/teacher/bookings/:id/status', checkAuthenticated, checkTeacher, (req,
 /// Jayden and Tian Le///
 
 app.get('/student/slots', checkAuthenticated, checkStudent, (req, res) => {
+    const teacherName = req.query.teacher || '';
+    const subject = req.query.subject || '';
+    const location = req.query.location || '';
+
     const sql = `
         SELECT ts.*, t.full_name as teacher_name,
                (SELECT status FROM bookings b WHERE b.slot_id = ts.slot_id AND b.student_id = ?) as my_status,
@@ -967,14 +971,17 @@ app.get('/student/slots', checkAuthenticated, checkStudent, (req, res) => {
         FROM teacher_slots ts
         JOIN teachers t ON ts.teacher_id = t.teacher_id
         WHERE ts.is_available = 1 AND ts.status = 'approved' AND ts.slot_date >= CURDATE()
+          AND t.full_name LIKE ?
+          AND ts.subject LIKE ?
+          AND ts.location LIKE ?
         ORDER BY ts.created_at DESC
     `;
-    db.query(sql, [req.session.user.id], (error, slots) => {
+    db.query(sql, [req.session.user.id, '%' + teacherName + '%', '%' + subject + '%', '%' + location + '%'], (error, slots) => {
         if (error) {
             req.flash('error', 'Could not load available slots.');
             return res.redirect('/student');
         }
-        res.render('student_slots', { slots });
+        res.render('student_slots', { slots, teacherName, subject, location });
     });
 });
 
