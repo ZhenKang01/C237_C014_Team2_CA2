@@ -50,6 +50,7 @@ const tables = [
             email VARCHAR(100) NOT NULL UNIQUE,
             password_hash VARCHAR(255) NOT NULL,
             phone_number VARCHAR(20) NOT NULL,
+            onboarding_completed TINYINT(1) DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`,
         `CREATE TABLE IF NOT EXISTS teachers (
@@ -108,20 +109,30 @@ const tables = [
         `ALTER TABLE teacher_slots ADD COLUMN capacity INT NOT NULL DEFAULT 1`,
         `ALTER TABLE teacher_slots ADD COLUMN status ENUM('pending', 'approved', 'rejected') DEFAULT 'approved'`,
         `ALTER TABLE teacher_slots ADD COLUMN created_by ENUM('teacher', 'admin') DEFAULT 'teacher'`,
-        `ALTER TABLE teacher_slots ADD COLUMN reject_reason TEXT`
+        `ALTER TABLE teacher_slots ADD COLUMN reject_reason TEXT`,
+        `ALTER TABLE students ADD COLUMN onboarding_completed TINYINT(1) DEFAULT 0`,
     ];
 
+
+    /// Jenita ///
     let i = 0;
     function nextTable() {
         if (i < tables.length) {
             db.query(tables[i], (err) => {
-                if (err) console.error('Error creating table:', err.message);
+                if(
+                    err &&
+                    err.code !== 'ER_DUP_FIELDNAME' 
+                ) {
+                    console.error('Error creating table:', err.message);
+                }
+
                 i++;
                 nextTable();
+
             });
         }
     }
-    nextTable();
+    nextTable(); 
 
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -301,8 +312,17 @@ app.post('/login', (req, res) => {
                         return res.status(500).send('Unable to create a login session.');
                     }
                     req.session.user = safeUser;
-                    req.flash('success', 'Welcome back, ' + safeUser.full_name + '.');
-                    return req.session.save(() => res.redirect(dashboardFor(current.role)));
+req.flash('success', 'Welcome back, ' + safeUser.full_name + '.');
+
+if (
+    current.role === 'student' &&
+    safeUser.onboarding_completed == 0
+) {
+    return req.session.save(() => res.redirect('/student/share'));
+}
+
+return req.session.save(() => res.redirect(dashboardFor(current.role)));
+                    
                 });
             }
 
@@ -319,8 +339,7 @@ app.get('/dashboard', checkAuthenticated, (req, res) => {
 });
 ///////  Jenita - Login and Registration Validation End ///////
 
-///// Jenita - Enhancement feature /////
-//// Jenita - Enhancement feature End /////
+
 
 // --- PROFILE ROUTES ---
 
@@ -433,6 +452,48 @@ app.get('/teacher', checkAuthenticated, checkTeacher, (req, res) => {
     });
 });
 
+
+/// jenita - enhancement feature - sharelink + tutorial ///
+// =====================
+// Student Onboarding
+// =====================
+
+// Share page
+app.get('/student/share', checkAuthenticated, checkStudent, (req, res) => {
+    res.render('share', {
+        shareUrl: `${req.protocol}://${req.get('host')}/register`
+    });
+});
+
+// Tutorial page
+app.get('/tutorial', checkAuthenticated, checkStudent, (req, res) => {
+    res.render('tutorial');
+});
+
+// Finish tutorial
+app.get('/tutorial/finish', checkAuthenticated, checkStudent, (req, res) => {
+
+    db.query(
+        "UPDATE students SET onboarding_completed = 1 WHERE student_id = ?",
+        [req.session.user.id],
+        (err) => {
+
+            if (err) {
+                console.error(err);
+            }
+
+            req.session.user.onboarding_completed = 1;
+
+            res.redirect('/student');
+        }
+    );
+
+});
+
+// =====================
+// Student Dashboard
+// =====================
+
 app.get('/student', checkAuthenticated, checkStudent, (req, res) => {
     const sid = req.session.user.id;
     const q1 = 'SELECT COUNT(*) AS total_bookings FROM bookings WHERE student_id = ?';
@@ -453,6 +514,7 @@ app.get('/student', checkAuthenticated, checkStudent, (req, res) => {
 });
 
 // --- ADMIN USER ROUTES ---
+/// 
 
 app.get('/admin/users/new', checkAuthenticated, checkAdmin, (req, res) => {
     res.render('admin_user_form', { targetUser: {}, role: 'student' });
@@ -482,7 +544,7 @@ app.post('/admin/users/new', checkAuthenticated, checkAdmin, (req, res) => {
         res.redirect('/admin');
     });
 });
-
+/// Jereil - Admin View & Edit ////
 app.get('/admin/users/:role/:id/edit', checkAuthenticated, checkAdmin, (req, res) => {
     const { role, id } = req.params;
     const table = role + 's';
@@ -553,7 +615,7 @@ app.post('/admin/users/:role/:id/delete', checkAuthenticated, checkAdmin, (req, 
     });
 });
 
-// --- ADMIN SCHEDULE ROUTES ---
+/// JENITA ADMIN ADD SCHEDULE ///
 
 app.get('/admin/addschedule', checkAuthenticated, checkAdmin, (req, res) => {
     db.query('SELECT teacher_id, full_name, email FROM teachers ORDER BY full_name ASC', (error, teachers) => {
@@ -562,10 +624,10 @@ app.get('/admin/addschedule', checkAuthenticated, checkAdmin, (req, res) => {
             return res.redirect('/admin');
         }
 
-        if (isPastDate(slot_date)) {
-            req.flash('error', 'Cannot create a schedule for a past date.');
-            return res.redirect('/admin/addschedule');
-        }
+        //if (isPastDate(slot_date)) {
+           // req.flash('error', 'Cannot create a schedule for a past date.');
+            //return res.redirect('/admin/addschedule');
+        //}
 
         return res.render('admin_schedule', { teachers });
     });
@@ -573,6 +635,11 @@ app.get('/admin/addschedule', checkAuthenticated, checkAdmin, (req, res) => {
 
 app.post('/admin/addschedule', checkAuthenticated, checkAdmin, (req, res) => {
     const { teacher_id, subject, location, slot_date, slot_time, end_time } = req.body;
+
+    if (isPastDate(slot_date)) {
+    req.flash('error', 'Cannot create a schedule for a past date.');
+    return res.redirect('/admin/addschedule');
+}
 
     if (!teacher_id || !subject || !location || !slot_date || !slot_time || !end_time) {
         req.flash('error', 'All schedule fields are required.');
@@ -674,6 +741,7 @@ app.post('/admin/schedules/:id/delete', checkAuthenticated, checkAdmin, (req, re
 });
 
 // --- TEACHER SLOTS ROUTES ---
+/// Hein - Teacher Slots Management ///
 
 app.get('/teacher/slots', checkAuthenticated, checkTeacher, (req, res) => {
     const subject = req.query.subject || '';
@@ -768,6 +836,8 @@ app.post('/teacher/slots/:id/delete', checkAuthenticated, checkTeacher, (req, re
     });
 });
 
+/// hein - Teacher Edit Slot (with past date check) ///
+
 app.get('/teacher/slots/:id/edit', checkAuthenticated, checkTeacher, (req, res) => {
     const sql = 'SELECT * FROM teacher_slots WHERE slot_id = ? AND teacher_id = ?';
     db.query(sql, [req.params.id, req.session.user.id], (error, results) => {
@@ -809,7 +879,7 @@ app.post('/teacher/slots/:id/edit', checkAuthenticated, checkTeacher, (req, res)
     });
 });
 
-// --- TEACHER BOOKING APPROVALS ---
+
 
 app.get('/teacher/bookings', checkAuthenticated, checkTeacher, (req, res) => {
 
@@ -854,6 +924,10 @@ app.get('/teacher/bookings', checkAuthenticated, checkTeacher, (req, res) => {
 
 });
 
+
+
+
+/// hein - Teacher Approve/Reject Booking (with ownership check) ///
 app.post('/teacher/bookings/:id/status', checkAuthenticated, checkTeacher, (req, res) => {
     const { status, reject_reason } = req.body; // 'approved' or 'rejected'
     if (status !== 'approved' && status !== 'rejected') return res.redirect('/teacher/bookings');
@@ -881,6 +955,9 @@ app.post('/teacher/bookings/:id/status', checkAuthenticated, checkTeacher, (req,
 });
 
 // --- STUDENT BOOKING ROUTES ---
+
+
+/// Jayden and Tian Le///
 
 app.get('/student/slots', checkAuthenticated, checkStudent, (req, res) => {
     const sql = `
@@ -998,6 +1075,8 @@ app.post('/student/bookings/:id/cancel', checkAuthenticated, checkStudent, (req,
     });
 });
 
+/// Tian le ///
+
 app.get('/student/bookings/:id/edit', checkAuthenticated, checkStudent, (req, res) => {
     const sql = 'SELECT * FROM bookings WHERE booking_id = ? AND student_id = ? AND status = "pending"';
     db.query(sql, [req.params.id, req.session.user.id], (error, results) => {
@@ -1008,7 +1087,7 @@ app.get('/student/bookings/:id/edit', checkAuthenticated, checkStudent, (req, re
         res.render('student_booking_edit', { booking: results[0] });
     });
 });
-
+/// Jayden ///
 app.post('/student/bookings/:id/edit', checkAuthenticated, checkStudent, (req, res) => {
     const { class_size, description } = req.body;
     const sql = 'UPDATE bookings SET class_size = ?, description = ? WHERE booking_id = ? AND student_id = ? AND status = "pending"';

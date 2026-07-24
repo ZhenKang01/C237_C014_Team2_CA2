@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share TutorLink</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+
+<body class="auth-page">
+
+    <a class="brand auth-brand" href="/">
+        <span class="brand-mark">T</span>TutorLink
+    </a>
+
+    <main class="auth-layout">
+
+        <section class="auth-copy">
+            <span class="eyebrow">Student Onboarding</span>
+
+            <h1>Invite your friends to TutorLink!</h1>
+
+            <p>
+                Help grow the TutorLink community by sharing the registration
+                link with your classmates and friends.
+            </p>
+        </section>
+
+        <section class="form-card share-card">
+
+            <h2>Share TutorLink</h2>
+
+            <p class="share-description">
+                Copy the link below and send it to anyone who would like to
+                join TutorLink.
+            </p>
+
+            <div class="share-link-box">
+                <span><%= shareUrl %></span>
+
+                <button
+                    class="button secondary"
+                    type="button"
+                    onclick="navigator.clipboard.writeText('<%= shareUrl %>')">
+
+                    Copy Link
+
+                </button>
+            </div>
+
+            <div class="share-actions">
+
+                <a class="button primary full" href="/tutorial">
+                    Next
+                </a>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+</html>
