@@ -46,9 +46,9 @@ npm start
 ## Demo credentials
 | Role | Email | Password |
 |---|---|---|
-| Admin | admin@team.com | Admin@123 |
-| Teacher | teacher@team.com | Teacher@123 |
-| Student | student@team.com | Student@123 |
+| Admin | admin@test.com | password123 |
+| Teacher | teacher@test.com | password123 |
+| Student | student@test.com | password123 |
 
 ## Known remaining issue - not fixed here
 Passwords are hashed with `SHA1()`, which is cryptographically broken
